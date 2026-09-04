@@ -142,7 +142,7 @@
 </head>
 <body>
 <div class="app" id="app-shell">
-  <nav class="site-nav"><a href="baseline.html">State of the Science</a><a href="index.html">Research Watch</a><a href="interventions.html">Interventions</a><a href="media.html">Podcasts &amp; Video</a><a href="admin.html" class="is-current">Admin</a></nav>
+  <nav class="site-nav"><a href="baseline.html">State of the Science</a><a href="index.html">Research Watch</a><a href="interventions.html">Interventions</a><a href="media.html">Podcasts &amp; Video</a><a href="figures.html">Envelope Pushers</a><a href="admin.html" class="is-current">Admin</a></nav>
   <h1>Longevity News Admin</h1>
   <p class="sub">Queue a paper or article, add an intervention for the daily run to research, add a researcher or source to watch, or hand it a YouTube link for an episode it couldn't find.</p>
   <div id="app-locked" class="lock-screen">
@@ -196,6 +196,15 @@
       <label for="episode-url">YouTube link</label><input type="url" id="episode-url" placeholder="https://www.youtube.com/watch?v=…">
       <div class="card-foot"><button class="primary" id="submit-episode" type="button">Add link</button><div class="msg" id="episode-msg"></div></div>
     </div>
+    <div class="card">
+      <h2><span class="dot" style="background:#7c3aed"></span>Add an envelope pusher</h2>
+      <p class="hint">A person or organization to profile. Goes in as a stub; the next run researches and fills the profile.</p>
+      <label for="fig-name">Name</label><input type="text" id="fig-name" placeholder="e.g. Laura Deming">
+      <label for="fig-camp">Camp</label>
+      <select id="fig-camp"><option>Radical Life Extension</option><option>Clinical Longevity</option><option>Self-Experimenter</option><option>Popular Science</option><option>Research Scientist</option><option>Skeptic</option><option>Institution/Company</option></select>
+      <label for="fig-note">Why (optional)</label><input type="text" id="fig-note" placeholder="What they're known for">
+      <div class="card-foot"><button class="primary" id="submit-fig" type="button">Add profile</button><div class="msg" id="fig-msg"></div></div>
+    </div>
   </div></div>
 </div>
 <script>
@@ -230,6 +239,7 @@ document.getElementById("submit-article").addEventListener("click", async e => {
 document.getElementById("submit-interv").addEventListener("click", async e => { if (await submit("add_intervention", { name: v("interv-name"), category: v("interv-cat"), aliases: v("interv-aliases") }, document.getElementById("interv-msg"), e.target)) { document.getElementById("interv-name").value = ""; document.getElementById("interv-aliases").value = ""; } });
 document.getElementById("submit-res").addEventListener("click", async e => { if (await submit("add_researcher", { name: v("res-name"), affiliation: v("res-aff"), focus: v("res-focus") }, document.getElementById("res-msg"), e.target)) { ["res-name","res-aff","res-focus"].forEach(i => document.getElementById(i).value = ""); } });
 document.getElementById("submit-src").addEventListener("click", async e => { if (await submit("add_source", { source_name: v("src-name"), url: v("src-url"), source_kind: v("src-kind"), access_method: v("src-access"), quality_tier: v("src-tier"), notes: v("src-notes") }, document.getElementById("src-msg"), e.target)) { ["src-name","src-url","src-notes"].forEach(i => document.getElementById(i).value = ""); } });
+document.getElementById("submit-fig").addEventListener("click", async e => { if (await submit("add_figure", { name: v("fig-name"), camp: v("fig-camp"), tagline: v("fig-note") }, document.getElementById("fig-msg"), e.target)) { document.getElementById("fig-name").value = ""; document.getElementById("fig-note").value = ""; } });
 document.getElementById("submit-episode").addEventListener("click", async e => { const [show_name, episode_number] = v("episode-select").split("||"); if (await submit("add_episode_link", { show_name, episode_number, youtube_url: v("episode-url") }, document.getElementById("episode-msg"), e.target)) { document.getElementById("episode-url").value = ""; loadEpisodes(); } });
 </script>
 </body>
