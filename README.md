@@ -11,6 +11,7 @@ Files:
 - `index.html` — Research Watch (papers/preprints/news, evidence tier + relevance, 6-week synthesis card)
 - `interventions.html` — the two-axis verdict table
 - `media.html` — podcasts and YouTube
+- All three of the above render footnote numbers and a Sources list from `longevity_references`
 - `figures.html` — Envelope Pushers: profiles of Kurzweil, Johnson, Attia, Sinclair, de Grey, Kaeberlein, Huberman, Patrick, Longo, Altos, Retro, Hevolution (populated now)
 - `admin.html` — intake forms (queue link, add intervention, add researcher, add source, add episode link)
 - `overview.html` — about page with live counts

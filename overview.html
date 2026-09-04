@@ -121,6 +121,11 @@
     .entry-body-content { padding:12px 12px 16px; } .analysis-collapse { grid-template-rows:minmax(0,190px); }
   }
 
+  sup.fn { font-size: 10px; line-height: 0; margin-left: 2px; white-space: nowrap; } sup.fn a { color: var(--link); text-decoration: none; font-weight: 700; font-family: "IBM Plex Mono", monospace; padding: 0 1px; } sup.fn a:hover { text-decoration: underline; }
+  .sources { margin-top: 34px; scroll-margin-top: 20px; } .sources h2 { font-size: 15px; margin: 0 0 6px; } .sources p { font-size: 12px; color: var(--muted); margin: 0 0 10px; max-width: 72ch; }
+  .sources ol { padding-left: 26px; margin: 0; font-size: 12.5px; color: var(--ink-secondary); line-height: 1.5; } .sources li { margin-bottom: 6px; scroll-margin-top: 20px; overflow-wrap: anywhere; } .sources li:target { background: var(--accent-wash); border-radius: 4px; }
+  .sources .unverified { color: #b45309; font-style: italic; }
+
   .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0 0 24px; }
   .stat { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px; box-shadow:var(--shadow-1); }
   .stat .n { font-family:"IBM Plex Mono",monospace; font-size:26px; font-weight:600; color:var(--accent); } .stat .k { font-size:12px; color:var(--muted); }
@@ -165,7 +170,9 @@
     <h2>The baseline</h2>
     <p><a href="baseline.html">State of the Science</a> is the living document the rest of the site measures against: what fifty years of research established, where the field reversed itself, what sits at the frontier, and a four-tier instruction manual for what to actually do. It is versioned and append-only. The daily run compares new tier-1 and tier-2 evidence against the current version and publishes a new one only when a claim, confidence level or instruction should change — with a changelog entry citing the evidence.</p>
     <h2>The people</h2>
-    <p><a href="figures.html">Envelope Pushers</a> profiles the futurists, clinicians, self-experimenters, podcasters, scientists and funders driving the conversation, with each ones current program, claims, personal protocol, an evidence check, and disclosed conflicts of interest.</p>
+    <p><a href="figures.html">Envelope Pushers</a> profiles the futurists, clinicians, self-experimenters, podcasters, scientists and funders driving the conversation, with each one's current program, claims, personal protocol, an evidence check, and disclosed conflicts of interest.</p>
+    <h2>Trust but verify</h2>
+    <p>Every claim on the State of the Science, Interventions and Envelope Pushers pages carries a footnote number. The numbers link to a Sources list at the bottom of each page, and each source is a primary trial, meta-analysis, official statement or Research Watch entry — never a secondary summary. Citations without a confirmed link are marked in amber until the daily run verifies them. If a claim has no footnote, treat it as unsourced.</p>
     <h2>The two-axis idea</h2>
     <p>Most longevity coverage collapses "is there evidence?" and "is it safe?" into one impression. This site keeps them apart on purpose, because the answers are independent. Something can have decades of safety data and no evidence it works (most of the supplement aisle). Something else can have the strongest lifespan data in mammals and real side effects (rapamycin). The <a href="interventions.html">Interventions</a> page grades each on both axes and combines them into one of four verdicts:</p>
     <ul>
@@ -205,18 +212,47 @@ function initClient() {
   if (typeof window.supabase === "undefined" || !window.supabase.createClient) { renderConnState("error", "Couldn't load the Supabase client library. Check your connection and reload."); return false; }
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); return true;
 }
-/* ---- shared analysis card renderer ---- */
-function normalizeRefs(it) { if (Array.isArray(it.source_refs)) return it.source_refs; if (Array.isArray(it.article_ids)) return it.article_ids.map(id => ({ type: "article", id })); return []; }
-function citeMarks(idx, refs) {
+/* ---- shared footnote engine ----
+   Every claim carries source_refs: [{type:"reference",key}|{type:"article",id}|{type:"episode",id}|{type:"intervention",id}].
+   cite(refs) returns superscript footnote numbers (first-seen order across the page) and records them in CITES;
+   renderSources() then writes the numbered Sources list at the bottom of the page. Call resetCites() before each
+   full re-render so numbering stays stable. */
+let REFS = {}; let CITES = new Map();
+async function loadRefs() { try { const { data } = await supabaseClient.from("longevity_references").select("key, citation, url, year, kind, verified"); (data||[]).forEach(r => REFS[r.key] = r); } catch {} }
+function resetCites() { CITES = new Map(); }
+function refKey(ref) { return ref.type === "reference" ? `reference:${ref.key}` : `${ref.type}:${ref.id}`; }
+function cite(refs) {
   if (!Array.isArray(refs) || !refs.length) return "";
-  const links = refs.map(ref => { const key = `${ref.type}:${ref.id}`; if (!idx.has(key)) idx.set(key, idx.size + 1); const n = idx.get(key);
-    if (ref.type === "episode") return `<a href="media.html#episode-${ref.id}" title="Open source episode">${n}</a>`;
-    if (ref.type === "intervention") return `<a href="interventions.html#intervention-${ref.id}" title="Open intervention">${n}</a>`;
-    return `<a href="index.html#article-${ref.id}" onclick="return (window.jumpToArticle ? jumpToArticle(${ref.id}, event) : true)" title="Jump to source">${n}</a>`; }).join(",");
-  return ` <span class="cite">[${links}]</span>`;
+  const nums = refs.map(ref => { const k = refKey(ref); if (!CITES.has(k)) CITES.set(k, { n: CITES.size + 1, ref }); return CITES.get(k).n; });
+  return ` <sup class="fn">${nums.map(n => `<a href="#src-${n}" title="Source ${n}">${n}</a>`).join(",")}</sup>`;
 }
-function renderCitedList(items, idx) { if (!Array.isArray(items)) return ""; return items.map(it => typeof it === "string" ? `<li>${esc(it)}</li>` : `<li>${it.label ? `<span class="analysis-item-label">${esc(it.label)}:</span> ` : ""}${esc(it.text)}${citeMarks(idx, normalizeRefs(it))}</li>`).join(""); }
-function renderCitedParagraph(items, idx) { if (!items) return ""; if (typeof items === "string") return esc(items); return items.map(it => typeof it === "string" ? esc(it) : `${esc(it.text)}${citeMarks(idx, normalizeRefs(it))}`).join(" "); }
+function normalizeRefs(it) { if (Array.isArray(it.source_refs)) return it.source_refs; if (Array.isArray(it.article_ids)) return it.article_ids.map(id => ({ type: "article", id })); return []; }
+function citeMarks(_idx, refs) { return cite(refs); }
+async function renderSources() {
+  const el = document.getElementById("sources"); if (!el) return;
+  const entries = [...CITES.values()].sort((a, b) => a.n - b.n);
+  if (!entries.length) { el.hidden = true; return; }
+  const artIds = entries.filter(e => e.ref.type === "article").map(e => e.ref.id);
+  const epIds = entries.filter(e => e.ref.type === "episode").map(e => e.ref.id);
+  const ivIds = entries.filter(e => e.ref.type === "intervention").map(e => e.ref.id);
+  const titles = {};
+  try {
+    if (artIds.length) { const { data } = await supabaseClient.from("longevity_articles").select("id, article_title, link, source_site, source_publish_date, evidence_tier").in("id", artIds); (data||[]).forEach(a => titles[`article:${a.id}`] = a); }
+    if (epIds.length) { const { data } = await supabaseClient.from("longevity_media").select("id, title, show_name, link").in("id", epIds); (data||[]).forEach(a => titles[`episode:${a.id}`] = a); }
+    if (ivIds.length) { const { data } = await supabaseClient.from("longevity_interventions").select("id, name").in("id", ivIds); (data||[]).forEach(a => titles[`intervention:${a.id}`] = a); }
+  } catch {}
+  el.hidden = false;
+  el.querySelector("ol").innerHTML = entries.map(({ n, ref }) => {
+    let body = "";
+    if (ref.type === "reference") { const r = REFS[ref.key]; body = r ? `${esc(r.citation)}${r.url ? ` <a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.url.replace(/^https?:\/\//, "").slice(0, 60))}${r.url.length > 68 ? "…" : ""} ↗</a>` : ` <span class="unverified">link pending verification</span>`}` : `<span class="unverified">Reference "${esc(ref.key)}" not found</span>`; }
+    else if (ref.type === "article") { const a = titles[`article:${ref.id}`]; body = a ? `${esc(a.article_title)} — ${esc(a.source_site)}${a.source_publish_date ? `, ${fmtDate(a.source_publish_date)}` : ""}. <a href="index.html#article-${a.id}">Research Watch entry</a> · <a href="${esc(a.link)}" target="_blank" rel="noopener">source ↗</a>` : `<a href="index.html#article-${ref.id}">Research Watch article #${ref.id}</a>`; }
+    else if (ref.type === "episode") { const a = titles[`episode:${ref.id}`]; body = a ? `${esc(a.show_name)}: ${esc(a.title)}. <a href="media.html#episode-${a.id}">episode entry</a>` : `<a href="media.html#episode-${ref.id}">episode #${ref.id}</a>`; }
+    else if (ref.type === "intervention") { const a = titles[`intervention:${ref.id}`]; body = `<a href="interventions.html#intervention-${ref.id}">${esc(a ? a.name : `intervention #${ref.id}`)}</a> (Interventions page)`; }
+    return `<li id="src-${n}">${body}</li>`;
+  }).join("");
+}
+function renderCitedList(items, idx) { if (!Array.isArray(items)) return ""; return items.map(it => typeof it === "string" ? `<li>${esc(it)}</li>` : `<li>${it.label ? `<span class="analysis-item-label">${esc(it.label)}:</span> ` : ""}${esc(it.text)}${cite(normalizeRefs(it))}</li>`).join(""); }
+function renderCitedParagraph(items, idx) { if (!items) return ""; if (typeof items === "string") return esc(items); return items.map(it => typeof it === "string" ? esc(it) : `${esc(it.text)}${cite(normalizeRefs(it))}`).join(" "); }
 let analysisHistory = [], analysisIndex = 0;
 function renderAnalysis(row) {
   const card = document.getElementById("analysis-card"); if (!card) return;
@@ -225,10 +261,11 @@ function renderAnalysis(row) {
   document.getElementById("analysis-title").textContent = `6-Week Research Synthesis as of ${fmtDateTime(row.inserted_at)}`;
   const parts = []; if (a.article_count != null) parts.push(`${a.article_count} article${a.article_count === 1 ? "" : "s"}`); if (a.episode_count) parts.push(`${a.episode_count} episode${a.episode_count === 1 ? "" : "s"}`);
   document.getElementById("analysis-meta").textContent = `${a.period_label ? `Last 6 Weeks (${a.period_label})` : "Last 6 Weeks"}${parts.length ? ` • ${parts.join(" + ")} analyzed` : ""}`;
-  const idx = new Map();
+  const idx = null;
   document.getElementById("analysis-summary").innerHTML = renderCitedParagraph(a.executive_summary, idx);
   const sec = (id, items) => { const ul = document.getElementById(id); ul.innerHTML = renderCitedList(items, idx); ul.closest(".analysis-section").hidden = !(items && items.length); };
   sec("analysis-shifts", a.notable_shifts); sec("analysis-findings", a.key_findings); sec("analysis-hype", a.hype_watch); sec("analysis-implications", a.practical_implications);
+  renderSources();
 }
 function updateAnalysisNav() { const nav = document.getElementById("analysis-nav"); if (analysisHistory.length <= 1) { nav.hidden = true; return; } nav.hidden = false; document.getElementById("analysis-prev").disabled = analysisIndex >= analysisHistory.length - 1; document.getElementById("analysis-next").disabled = analysisIndex <= 0; document.getElementById("analysis-nav-pos").textContent = `${analysisIndex + 1} of ${analysisHistory.length}`; }
 function showAnalysisAt(i) { if (i < 0 || i >= analysisHistory.length) return; analysisIndex = i; renderAnalysis(analysisHistory[i]); updateAnalysisNav(); }
