@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Longevity News</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --ground:#f3f4f3; --plane:#e9ebea; --surface:#ffffff; --surface-2:#f6f8f7;
+    --ink:#1a1a1a; --ink-secondary:#4d4d4d; --muted:#8a8a8a;
+    --border:rgba(26,26,26,0.12); --border-strong:rgba(26,26,26,0.22);
+    --accent:#0f7b6c; --accent-ink:#ffffff; --accent-wash:rgba(15,123,108,0.08); --accent-wash-2:rgba(15,123,108,0.20); --link:#0b6357;
+    --tier-1:#1f8a4c; --tier-2:#2a78d6; --tier-3:#eda100; --tier-4:#eb6834; --tier-5:#8a8a8a;
+    --v-supported:#1f8a4c; --v-risk:#eda100; --v-lowdown:#2a78d6; --v-avoid:#c8102e; --v-unassessed:#8a8a8a;
+    --ok:#1f8a4c; --ok-wash:rgba(31,138,76,0.10); --ok-wash-2:rgba(31,138,76,0.25);
+    --shadow-1:0 1px 2px rgba(26,26,26,0.06); --shadow-2:0 8px 24px rgba(26,26,26,0.10);
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    color-scheme:dark; --ground:#121413; --plane:#181a19; --surface:#1e201f; --surface-2:#262928;
+    --ink:#f2f2f2; --ink-secondary:#c7c7c7; --muted:#8f8f8f; --border:rgba(242,242,242,0.12); --border-strong:rgba(242,242,242,0.22);
+    --accent:#2fc4ad; --accent-ink:#04211c; --accent-wash:rgba(47,196,173,0.14); --accent-wash-2:rgba(47,196,173,0.26); --link:#5fd9c6;
+    --tier-1:#33b06a; --tier-2:#3987e5; --tier-3:#c98500; --tier-4:#d95926; --tier-5:#8f8f8f;
+    --v-supported:#33b06a; --v-risk:#f0b429; --v-lowdown:#3987e5; --v-avoid:#ff4d68; --v-unassessed:#8f8f8f;
+    --ok:#33b06a; --ok-wash:rgba(51,176,106,0.14); --ok-wash-2:rgba(51,176,106,0.3);
+    --shadow-1:0 1px 2px rgba(0,0,0,0.30); --shadow-2:0 12px 32px rgba(0,0,0,0.45);
+  } }
+  * { box-sizing:border-box; } html { -webkit-text-size-adjust:100%; } html,body { overflow-x:hidden; width:100%; max-width:100vw; }
+  body { margin:0; background:var(--ground); color:var(--ink); font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; line-height:1.5; }
+  img,svg { max-width:100%; }
+  @media (prefers-reduced-motion:no-preference) { .entry-body { transition:grid-template-rows 180ms ease; } .chevron { transition:transform 150ms ease; } }
+  h1,h2,h3 { font-weight:700; text-wrap:balance; margin:0; } a { color:var(--link); }
+  .mono { font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+  .app { max-width:1040px; margin:0 auto; padding:28px 20px 80px; width:100%; }
+  .masthead { padding:8px 4px 0; margin-bottom:16px; }
+  .masthead h1 { font-size:clamp(28px,4vw,38px); letter-spacing:-0.005em; }
+  .mast-sub { margin:10px 0 0; max-width:62ch; color:var(--ink-secondary); font-size:15px; }
+  .mast-meta { margin-top:14px; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px; color:var(--muted); }
+  .masthead-divider { border-top:1px solid var(--border); margin:16px 0; }
+  .site-nav { display:flex; gap:14px; margin-top:12px; font-size:13px; font-weight:600; flex-wrap:wrap; }
+  .site-nav a { text-decoration:none; color:var(--ink-secondary); padding:4px 0; border-bottom:2px solid transparent; }
+  .site-nav a:hover { color:var(--ink); } .site-nav a.is-current { color:var(--accent); border-bottom-color:var(--accent); }
+  .page-tagline { margin:8px 0 0; font-size:12.5px; color:var(--muted); max-width:62ch; }
+  .masthead-title-row { display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .overview-link { color:var(--link); font-weight:700; font-size:13px; text-decoration:none; white-space:nowrap; }
+  .disclaimer-banner { display:flex; gap:10px; align-items:flex-start; background:var(--accent-wash); border:1px solid var(--accent-wash-2); color:var(--ink); border-radius:8px; padding:12px 14px; margin:0; font-size:13px; line-height:1.5; overflow-wrap:break-word; }
+  .disclaimer-banner .icon { flex:none; } .disclaimer-banner strong { font-weight:700; color:var(--accent); }
+  .conn-banner { margin:8px 0 0; padding:10px 14px; border-radius:8px; background:var(--accent-wash); border:1px solid var(--accent-wash-2); color:var(--ink); font-size:13.5px; }
+  .filter-section-head { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 10px; margin:0 2px 10px; }
+  .filter-section-head h2 { font-size:14px; letter-spacing:0.01em; } .filter-hint { font-size:12px; color:var(--muted); margin:0; }
+  .priority-note { font-size:11.5px; color:var(--muted); margin:0 2px 10px; max-width:72ch; }
+  .filter-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:18px; box-shadow:var(--shadow-1); position:sticky; top:12px; z-index:5; }
+  .search-wrap { position:relative; flex:1 1 200px; min-width:160px; }
+  .search-wrap svg { position:absolute; left:9px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--muted); pointer-events:none; }
+  .search-wrap input { width:100%; font:inherit; font-size:13.5px; padding:7px 10px 7px 28px; border-radius:6px; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--ink); }
+  .search-wrap input:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  .cat-toggle { display:inline-flex; gap:4px; padding:3px; background:var(--surface-2); border:1px solid var(--border); border-radius:7px; flex-wrap:wrap; }
+  .cat-btn { all:unset; cursor:pointer; font-size:12px; font-weight:500; padding:5px 9px; border-radius:5px; color:var(--ink-secondary); display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .cat-btn .dot { width:7px; height:7px; border-radius:50%; flex:none; } .cat-btn:hover { background:var(--surface); }
+  .cat-btn.is-active { background:var(--surface); color:var(--ink); box-shadow:0 0 0 1px var(--border-strong); } .cat-btn[data-cat="all"] .dot { display:none; }
+  select, .stepper { font:inherit; font-size:12.5px; color:var(--ink); background:var(--surface-2); border:1px solid var(--border-strong); border-radius:6px; padding:6px 9px; } select { cursor:pointer; }
+  .stepper { display:inline-flex; align-items:center; gap:7px; } .stepper label { color:var(--muted); font-size:11.5px; }
+  .stepper input[type=range] { accent-color:var(--accent); width:84px; } .stepper output { font-family:"IBM Plex Mono",monospace; min-width:2.6em; }
+  .reset-btn { all:unset; cursor:pointer; font-size:12px; color:var(--muted); padding:6px 8px; border-radius:6px; } .reset-btn:hover { color:var(--ink); background:var(--surface-2); }
+  .result-line { font-size:12.5px; color:var(--muted); margin:0 2px 10px; } .result-line strong { color:var(--ink); }
+  .ledger { display:flex; flex-direction:column; gap:8px; }
+  .entry { background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow-1); overflow:hidden; scroll-margin-top:96px; }
+  @keyframes cite-flash { 0% { background:var(--accent-wash-2); } 100% { background:var(--surface); } } .entry.is-highlighted { animation:cite-flash 1.8s ease-out; }
+  .entry-head { all:unset; box-sizing:border-box; display:grid; grid-template-columns:40px 1fr 20px; align-items:center; gap:14px; width:100%; padding:13px 14px; cursor:pointer; }
+  .entry-head:hover { background:var(--surface-2); } .entry-head:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+  .score-badge { font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:14px; width:40px; height:40px; border-radius:7px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; background:var(--surface-2); border:1px solid var(--border); color:var(--ink); }
+  .score-badge span { font-size:8px; font-weight:500; color:var(--muted); margin-top:2px; }
+  .entry-main { min-width:0; text-align:left; }
+  .entry-title { font-weight:600; font-size:14.5px; color:var(--ink); margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .badges { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; padding:2px 7px; border-radius:20px; color:var(--ink-secondary); background:var(--surface-2); border:1px solid var(--border); white-space:nowrap; }
+  .badge .dot { width:6px; height:6px; border-radius:50%; flex:none; } .badge.mono { font-family:"IBM Plex Mono",monospace; }
+  .badge.tag { background:var(--accent-wash); border-color:var(--accent-wash-2); color:var(--accent); font-weight:600; white-space:normal; }
+  .badge.new-badge { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700; }
+  .chevron { justify-self:end; width:18px; height:18px; color:var(--muted); } .entry.is-open .chevron { transform:rotate(180deg); }
+  .entry-body { display:grid; grid-template-rows:0fr; } .entry.is-open .entry-body { grid-template-rows:1fr; } .entry-body-inner { overflow:hidden; min-height:0; }
+  .entry-body-content { padding:14px 18px 20px 68px; border-top:1px solid var(--border); margin-top:2px; }
+  .entry-summary { font-size:13.5px; color:var(--ink-secondary); margin:0 0 12px; max-width:68ch; }
+  .entry-bullets { margin:0 0 12px; padding-left:18px; font-size:13px; color:var(--ink-secondary); } .entry-bullets li { margin-bottom:4px; }
+  .entry-insight { font-size:13px; color:var(--ink); background:var(--surface-2); border-left:2px solid var(--accent); padding:9px 12px; border-radius:0 6px 6px 0; margin:0 0 14px; max-width:68ch; }
+  .entry-insight strong { color:var(--accent); }
+  .entry-link { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; text-decoration:none; color:var(--link); } .entry-link:hover { text-decoration:underline; }
+  .rationale { font-size:11.5px; color:var(--muted); margin:-6px 0 12px; font-style:italic; }
+  .empty-state { text-align:center; padding:48px 20px; color:var(--muted); font-size:13.5px; background:var(--surface); border:1px dashed var(--border-strong); border-radius:8px; }
+  footer.note { margin-top:26px; font-size:11.5px; color:var(--muted); text-align:center; }
+  /* analysis card */
+  .analysis-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow-1); padding:18px 20px 16px; margin:0 0 22px; }
+  .analysis-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px 10px; margin:0 0 4px; } .analysis-head h2 { font-size:16px; }
+  .analysis-nav { display:flex; align-items:center; gap:6px; }
+  .analysis-nav button { all:unset; display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; border:1px solid var(--border); background:var(--surface-2); color:var(--ink); cursor:pointer; font-size:14px; }
+  .analysis-nav button:disabled { opacity:.35; cursor:default; } .analysis-nav-pos { font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--muted); min-width:42px; text-align:center; }
+  .analysis-meta { font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--muted); margin:0 0 14px; }
+  .analysis-collapse { display:grid; grid-template-rows:minmax(0,230px); overflow:hidden; position:relative; transition:grid-template-rows 220ms ease; }
+  .analysis-collapse.is-expanded { grid-template-rows:minmax(0,1fr); } .analysis-collapse-inner { overflow:hidden; min-height:0; }
+  .analysis-fade { position:absolute; left:0; right:0; bottom:0; height:64px; background:linear-gradient(to bottom, transparent, var(--surface)); pointer-events:none; } .analysis-collapse.is-expanded .analysis-fade { opacity:0; }
+  .analysis-section { margin:0 0 16px; } .analysis-section h3 { font-size:12.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); margin:0 0 8px; }
+  .analysis-section p { font-size:13.5px; margin:0; max-width:74ch; line-height:1.65; }
+  .analysis-section ul { list-style:none; margin:0; padding:0; font-size:13.5px; } .analysis-section ul li { position:relative; padding-left:26px; margin-bottom:10px; max-width:66ch; }
+  .analysis-section ul li::before { content:"\2192"; position:absolute; left:6px; top:0; color:var(--accent); font-size:12px; font-weight:700; }
+  .analysis-section.is-hype ul li::before { content:"\26A0"; color:#b45309; } .analysis-section.is-hype .analysis-item-label { color:#b45309; }
+  .analysis-section.is-shift ul li::before { content:"\21BA"; font-size:13px; }
+  .analysis-section ul.is-ordered { counter-reset:impl; } .analysis-section ul.is-ordered li { counter-increment:impl; padding-left:24px; }
+  .analysis-section ul.is-ordered li::before { content:counter(impl); left:0; width:17px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; text-align:center; background:var(--surface-2); border-radius:50%; line-height:17px; top:1px; }
+  .analysis-item-label { font-weight:700; margin-right:4px; }
+  .cite { margin-left:3px; font-size:10.5px; vertical-align:super; line-height:1; color:var(--muted); white-space:nowrap; } .cite a { color:var(--link); text-decoration:none; font-weight:700; font-family:"IBM Plex Mono",monospace; }
+  .analysis-toggle { all:unset; cursor:pointer; font-size:12.5px; font-weight:600; color:var(--link); padding:6px 14px; border-radius:20px; margin-top:10px; } .analysis-toggle:hover { background:var(--surface-2); }
+  @media (max-width:768px) {
+    .app { padding:16px 12px 50px; } * { min-width:0; } .masthead h1 { font-size:24px; } .mast-sub { font-size:13px; }
+    .filter-bar { position:static; flex-direction:column; align-items:stretch; padding:10px; gap:10px; } .filter-bar > * { width:100%; flex:1 1 100%; }
+    .cat-btn { flex:1 1 auto; justify-content:center; padding-top:8px; padding-bottom:8px; } select { width:100%; padding:9px; font-size:13px; }
+    .entry-head { grid-template-columns:28px 1fr 18px; gap:10px; padding:11px 12px; } .score-badge { width:28px; height:28px; font-size:11px; } .score-badge span { font-size:6.5px; }
+    .entry-title { white-space:normal; overflow:visible; overflow-wrap:break-word; font-size:13.5px; } .badge { font-size:10px; }
+    .entry-body-content { padding:12px 12px 16px; } .analysis-collapse { grid-template-rows:minmax(0,190px); }
+  }
+
+  .app { max-width:520px; } .app.is-unlocked { max-width:1040px; }
+  h1 { font-size:24px; margin-top:16px; } .sub { color:var(--ink-secondary); font-size:14px; margin:8px 0 22px; max-width:62ch; }
+  .lock-screen { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:22px; box-shadow:var(--shadow-1); }
+  .lock-screen p { margin:0 0 12px; font-size:14px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; box-shadow:var(--shadow-1); display:flex; flex-direction:column; }
+  .card h2 { font-size:15px; display:flex; align-items:center; gap:8px; margin-bottom:4px; } .card h2 .dot { width:9px; height:9px; border-radius:50%; }
+  .hint { font-size:12px; color:var(--muted); margin:0 0 12px; }
+  label { display:block; font-size:12px; font-weight:600; margin:10px 0 4px; }
+  input[type=text], input[type=url], input[type=password], textarea, select { width:100%; font:inherit; font-size:13.5px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--ink); }
+  textarea { min-height:64px; resize:vertical; } .field-hint { font-size:11px; color:var(--muted); margin:4px 0 0; }
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  button.primary { font:inherit; font-size:13px; font-weight:600; padding:9px 14px; border-radius:6px; border:none; background:var(--accent); color:var(--accent-ink); cursor:pointer; margin-top:12px; } button.primary:disabled { opacity:.5; }
+  .card-foot { margin-top:auto; }
+  .msg { font-size:12px; padding:7px 10px; border-radius:6px; margin-top:8px; display:none; } .msg.show { display:block; }
+  .msg.ok { background:var(--ok-wash); border:1px solid var(--ok-wash-2); color:var(--ok); } .msg.err { background:rgba(200,16,46,.08); border:1px solid rgba(200,16,46,.25); color:#c8102e; }
+  #app-unlocked { display:none; }
+  @media (max-width:700px) { .grid, .field-row { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="app" id="app-shell">
+  <nav class="site-nav"><a href="index.html">Research Watch</a><a href="interventions.html">Interventions</a><a href="media.html">Podcasts &amp; Video</a><a href="admin.html" class="is-current">Admin</a></nav>
+  <h1>Longevity News Admin</h1>
+  <p class="sub">Queue a paper or article, add an intervention for the daily run to research, add a researcher or source to watch, or hand it a YouTube link for an episode it couldn't find.</p>
+  <div id="app-locked" class="lock-screen">
+    <p>Enter the password to continue.</p>
+    <input type="password" id="password-input" placeholder="Password" autocomplete="off">
+    <button id="unlock-btn" type="button" class="primary" style="width:100%">Unlock</button>
+    <div class="msg err" id="unlock-msg"></div>
+  </div>
+  <div id="app-unlocked"><div class="grid">
+    <div class="card">
+      <h2><span class="dot" style="background:var(--tier-2)"></span>Queue a paper or article</h2>
+      <p class="hint">The daily run fetches, classifies (evidence tier, study type) and scores it regardless of source.</p>
+      <label for="article-link">Link</label><input type="url" id="article-link" placeholder="https://pubmed.ncbi.nlm.nih.gov/…">
+      <label for="article-notes">Notes (optional)</label><textarea id="article-notes" placeholder="Why it's worth including"></textarea>
+      <div class="card-foot"><button class="primary" id="submit-article" type="button">Add to queue</button><div class="msg" id="article-msg"></div></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot" style="background:var(--v-lowdown)"></span>Add an intervention</h2>
+      <p class="hint">Goes in as Unassessed; the next run researches it and fills in efficacy, safety and verdict.</p>
+      <label for="interv-name">Name</label><input type="text" id="interv-name" placeholder="e.g. Urolithin A">
+      <label for="interv-cat">Category</label>
+      <select id="interv-cat"><option>Supplement</option><option>Prescription Drug</option><option>Diet/Nutrition</option><option>Exercise</option><option>Sleep</option><option>Lifestyle/Behavioral</option><option>Diagnostic/Biomarker</option><option>Procedure/Therapy</option><option>Other</option></select>
+      <label for="interv-aliases">Aliases (optional, comma-separated)</label><input type="text" id="interv-aliases" placeholder="Mitopure, UA">
+      <div class="card-foot"><button class="primary" id="submit-interv" type="button">Add intervention</button><div class="msg" id="interv-msg"></div></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot" style="background:var(--tier-1)"></span>Add a researcher or lab</h2>
+      <p class="hint">The daily run searches for their new papers, talks and interviews.</p>
+      <label for="res-name">Name</label><input type="text" id="res-name" placeholder="e.g. Vadim Gladyshev">
+      <label for="res-aff">Affiliation (optional)</label><input type="text" id="res-aff" placeholder="Harvard">
+      <label for="res-focus">Focus (optional)</label><input type="text" id="res-focus" placeholder="Aging clocks, rejuvenation">
+      <div class="card-foot"><button class="primary" id="submit-res" type="button">Add researcher</button><div class="msg" id="res-msg"></div></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot" style="background:var(--tier-3)"></span>Add a source</h2>
+      <p class="hint">A journal, preprint feed, news site, podcast or YouTube channel to sweep daily.</p>
+      <label for="src-name">Name</label><input type="text" id="src-name" placeholder="e.g. Cell Metabolism">
+      <label for="src-url">Feed, API or listing URL</label><input type="url" id="src-url" placeholder="https://…">
+      <div class="field-row">
+        <div><label for="src-kind">Kind</label><select id="src-kind"><option>Journal</option><option>Preprint Server</option><option>Clinical Registry</option><option>News/Magazine</option><option>Podcast</option><option>YouTube Channel</option><option>Organization/Blog</option></select></div>
+        <div><label for="src-access">Access</label><select id="src-access"><option>RSS</option><option>API</option><option>HTML_LISTING</option><option>APPLE_LOOKUP</option></select></div>
+      </div>
+      <label for="src-tier">Quality tier</label><select id="src-tier"><option value="1">1 — rigorous / primary</option><option value="2" selected>2 — solid, mixed</option><option value="3">3 — popular / advocacy (leads only)</option></select>
+      <label for="src-notes">Notes (optional)</label><textarea id="src-notes"></textarea>
+      <div class="card-foot"><button class="primary" id="submit-src" type="button">Add source</button><div class="msg" id="src-msg"></div></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot" style="background:var(--tier-4)"></span>Add an episode's YouTube link</h2>
+      <p class="hint">For episodes stuck at "Needs link". Pick the show + episode, paste the video URL.</p>
+      <label for="episode-select">Episode</label><select id="episode-select"><option value="">Loading…</option></select>
+      <label for="episode-url">YouTube link</label><input type="url" id="episode-url" placeholder="https://www.youtube.com/watch?v=…">
+      <div class="card-foot"><button class="primary" id="submit-episode" type="button">Add link</button><div class="msg" id="episode-msg"></div></div>
+    </div>
+  </div></div>
+</div>
+<script>
+const ENDPOINT = "https://acxdvzcohjayvmqdaoke.supabase.co/functions/v1/longevity-queue-submit";
+const SUPABASE_URL = "https://acxdvzcohjayvmqdaoke.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_2n567u9zKgZ-L-M_yGRf5Q_HEV_p1-f";
+let PASSWORD = "";
+function showMsg(el, text, ok) { el.textContent = text; el.className = `msg show ${ok ? "ok" : "err"}`; }
+async function submit(action, fields, msgEl, btn) {
+  btn.disabled = true; msgEl.className = "msg";
+  try { const res = await fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: PASSWORD, action, ...fields }) });
+    const data = await res.json().catch(() => ({})); showMsg(msgEl, data.message || data.error || (res.ok ? "Done." : `Request failed (${res.status})`), res.ok && data.ok); return res.ok && data.ok; }
+  catch (e) { showMsg(msgEl, "Network error: " + e, false); return false; } finally { btn.disabled = false; }
+}
+async function loadEpisodes() {
+  const sel = document.getElementById("episode-select");
+  try { const c = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data } = await c.from("longevity_media").select("show_name, episode_number, title, transcript_status").neq("transcript_status", "complete").not("episode_number", "is", null).order("publish_date", { ascending: false }).limit(200);
+    if (!data || !data.length) { sel.innerHTML = `<option value="">No episodes need a link right now</option>`; return; }
+    sel.innerHTML = `<option value="">Choose…</option>` + data.map(e => `<option value="${e.show_name.replace(/"/g,"&quot;")}||${e.episode_number}">${e.show_name} — #${e.episode_number} ${e.title.replace(/</g,"&lt;")}</option>`).join("");
+  } catch { sel.innerHTML = `<option value="">Couldn't load episodes</option>`; }
+}
+document.getElementById("unlock-btn").addEventListener("click", async () => {
+  const attempt = document.getElementById("password-input").value; const msg = document.getElementById("unlock-msg");
+  const res = await fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: attempt, action: "__verify__" }) });
+  if (res.ok) { PASSWORD = attempt; document.getElementById("app-locked").style.display = "none"; document.getElementById("app-unlocked").style.display = "block"; document.getElementById("app-shell").classList.add("is-unlocked"); loadEpisodes(); }
+  else showMsg(msg, "Wrong password.", false);
+});
+document.getElementById("password-input").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("unlock-btn").click(); });
+const v = id => document.getElementById(id).value.trim();
+document.getElementById("submit-article").addEventListener("click", async e => { if (await submit("add_article", { link: v("article-link"), notes: v("article-notes") }, document.getElementById("article-msg"), e.target)) { document.getElementById("article-link").value = ""; document.getElementById("article-notes").value = ""; } });
+document.getElementById("submit-interv").addEventListener("click", async e => { if (await submit("add_intervention", { name: v("interv-name"), category: v("interv-cat"), aliases: v("interv-aliases") }, document.getElementById("interv-msg"), e.target)) { document.getElementById("interv-name").value = ""; document.getElementById("interv-aliases").value = ""; } });
+document.getElementById("submit-res").addEventListener("click", async e => { if (await submit("add_researcher", { name: v("res-name"), affiliation: v("res-aff"), focus: v("res-focus") }, document.getElementById("res-msg"), e.target)) { ["res-name","res-aff","res-focus"].forEach(i => document.getElementById(i).value = ""); } });
+document.getElementById("submit-src").addEventListener("click", async e => { if (await submit("add_source", { source_name: v("src-name"), url: v("src-url"), source_kind: v("src-kind"), access_method: v("src-access"), quality_tier: v("src-tier"), notes: v("src-notes") }, document.getElementById("src-msg"), e.target)) { ["src-name","src-url","src-notes"].forEach(i => document.getElementById(i).value = ""); } });
+document.getElementById("submit-episode").addEventListener("click", async e => { const [show_name, episode_number] = v("episode-select").split("||"); if (await submit("add_episode_link", { show_name, episode_number, youtube_url: v("episode-url") }, document.getElementById("episode-msg"), e.target)) { document.getElementById("episode-url").value = ""; loadEpisodes(); } });
+</script>
+</body>
+</html>

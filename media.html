@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Podcasts & Video — Longevity News</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --ground:#f3f4f3; --plane:#e9ebea; --surface:#ffffff; --surface-2:#f6f8f7;
+    --ink:#1a1a1a; --ink-secondary:#4d4d4d; --muted:#8a8a8a;
+    --border:rgba(26,26,26,0.12); --border-strong:rgba(26,26,26,0.22);
+    --accent:#0f7b6c; --accent-ink:#ffffff; --accent-wash:rgba(15,123,108,0.08); --accent-wash-2:rgba(15,123,108,0.20); --link:#0b6357;
+    --tier-1:#1f8a4c; --tier-2:#2a78d6; --tier-3:#eda100; --tier-4:#eb6834; --tier-5:#8a8a8a;
+    --v-supported:#1f8a4c; --v-risk:#eda100; --v-lowdown:#2a78d6; --v-avoid:#c8102e; --v-unassessed:#8a8a8a;
+    --ok:#1f8a4c; --ok-wash:rgba(31,138,76,0.10); --ok-wash-2:rgba(31,138,76,0.25);
+    --shadow-1:0 1px 2px rgba(26,26,26,0.06); --shadow-2:0 8px 24px rgba(26,26,26,0.10);
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    color-scheme:dark; --ground:#121413; --plane:#181a19; --surface:#1e201f; --surface-2:#262928;
+    --ink:#f2f2f2; --ink-secondary:#c7c7c7; --muted:#8f8f8f; --border:rgba(242,242,242,0.12); --border-strong:rgba(242,242,242,0.22);
+    --accent:#2fc4ad; --accent-ink:#04211c; --accent-wash:rgba(47,196,173,0.14); --accent-wash-2:rgba(47,196,173,0.26); --link:#5fd9c6;
+    --tier-1:#33b06a; --tier-2:#3987e5; --tier-3:#c98500; --tier-4:#d95926; --tier-5:#8f8f8f;
+    --v-supported:#33b06a; --v-risk:#f0b429; --v-lowdown:#3987e5; --v-avoid:#ff4d68; --v-unassessed:#8f8f8f;
+    --ok:#33b06a; --ok-wash:rgba(51,176,106,0.14); --ok-wash-2:rgba(51,176,106,0.3);
+    --shadow-1:0 1px 2px rgba(0,0,0,0.30); --shadow-2:0 12px 32px rgba(0,0,0,0.45);
+  } }
+  * { box-sizing:border-box; } html { -webkit-text-size-adjust:100%; } html,body { overflow-x:hidden; width:100%; max-width:100vw; }
+  body { margin:0; background:var(--ground); color:var(--ink); font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; line-height:1.5; }
+  img,svg { max-width:100%; }
+  @media (prefers-reduced-motion:no-preference) { .entry-body { transition:grid-template-rows 180ms ease; } .chevron { transition:transform 150ms ease; } }
+  h1,h2,h3 { font-weight:700; text-wrap:balance; margin:0; } a { color:var(--link); }
+  .mono { font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+  .app { max-width:1040px; margin:0 auto; padding:28px 20px 80px; width:100%; }
+  .masthead { padding:8px 4px 0; margin-bottom:16px; }
+  .masthead h1 { font-size:clamp(28px,4vw,38px); letter-spacing:-0.005em; }
+  .mast-sub { margin:10px 0 0; max-width:62ch; color:var(--ink-secondary); font-size:15px; }
+  .mast-meta { margin-top:14px; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px; color:var(--muted); }
+  .masthead-divider { border-top:1px solid var(--border); margin:16px 0; }
+  .site-nav { display:flex; gap:14px; margin-top:12px; font-size:13px; font-weight:600; flex-wrap:wrap; }
+  .site-nav a { text-decoration:none; color:var(--ink-secondary); padding:4px 0; border-bottom:2px solid transparent; }
+  .site-nav a:hover { color:var(--ink); } .site-nav a.is-current { color:var(--accent); border-bottom-color:var(--accent); }
+  .page-tagline { margin:8px 0 0; font-size:12.5px; color:var(--muted); max-width:62ch; }
+  .masthead-title-row { display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .overview-link { color:var(--link); font-weight:700; font-size:13px; text-decoration:none; white-space:nowrap; }
+  .disclaimer-banner { display:flex; gap:10px; align-items:flex-start; background:var(--accent-wash); border:1px solid var(--accent-wash-2); color:var(--ink); border-radius:8px; padding:12px 14px; margin:0; font-size:13px; line-height:1.5; overflow-wrap:break-word; }
+  .disclaimer-banner .icon { flex:none; } .disclaimer-banner strong { font-weight:700; color:var(--accent); }
+  .conn-banner { margin:8px 0 0; padding:10px 14px; border-radius:8px; background:var(--accent-wash); border:1px solid var(--accent-wash-2); color:var(--ink); font-size:13.5px; }
+  .filter-section-head { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 10px; margin:0 2px 10px; }
+  .filter-section-head h2 { font-size:14px; letter-spacing:0.01em; } .filter-hint { font-size:12px; color:var(--muted); margin:0; }
+  .priority-note { font-size:11.5px; color:var(--muted); margin:0 2px 10px; max-width:72ch; }
+  .filter-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:18px; box-shadow:var(--shadow-1); position:sticky; top:12px; z-index:5; }
+  .search-wrap { position:relative; flex:1 1 200px; min-width:160px; }
+  .search-wrap svg { position:absolute; left:9px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--muted); pointer-events:none; }
+  .search-wrap input { width:100%; font:inherit; font-size:13.5px; padding:7px 10px 7px 28px; border-radius:6px; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--ink); }
+  .search-wrap input:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  .cat-toggle { display:inline-flex; gap:4px; padding:3px; background:var(--surface-2); border:1px solid var(--border); border-radius:7px; flex-wrap:wrap; }
+  .cat-btn { all:unset; cursor:pointer; font-size:12px; font-weight:500; padding:5px 9px; border-radius:5px; color:var(--ink-secondary); display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .cat-btn .dot { width:7px; height:7px; border-radius:50%; flex:none; } .cat-btn:hover { background:var(--surface); }
+  .cat-btn.is-active { background:var(--surface); color:var(--ink); box-shadow:0 0 0 1px var(--border-strong); } .cat-btn[data-cat="all"] .dot { display:none; }
+  select, .stepper { font:inherit; font-size:12.5px; color:var(--ink); background:var(--surface-2); border:1px solid var(--border-strong); border-radius:6px; padding:6px 9px; } select { cursor:pointer; }
+  .stepper { display:inline-flex; align-items:center; gap:7px; } .stepper label { color:var(--muted); font-size:11.5px; }
+  .stepper input[type=range] { accent-color:var(--accent); width:84px; } .stepper output { font-family:"IBM Plex Mono",monospace; min-width:2.6em; }
+  .reset-btn { all:unset; cursor:pointer; font-size:12px; color:var(--muted); padding:6px 8px; border-radius:6px; } .reset-btn:hover { color:var(--ink); background:var(--surface-2); }
+  .result-line { font-size:12.5px; color:var(--muted); margin:0 2px 10px; } .result-line strong { color:var(--ink); }
+  .ledger { display:flex; flex-direction:column; gap:8px; }
+  .entry { background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow-1); overflow:hidden; scroll-margin-top:96px; }
+  @keyframes cite-flash { 0% { background:var(--accent-wash-2); } 100% { background:var(--surface); } } .entry.is-highlighted { animation:cite-flash 1.8s ease-out; }
+  .entry-head { all:unset; box-sizing:border-box; display:grid; grid-template-columns:40px 1fr 20px; align-items:center; gap:14px; width:100%; padding:13px 14px; cursor:pointer; }
+  .entry-head:hover { background:var(--surface-2); } .entry-head:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+  .score-badge { font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:14px; width:40px; height:40px; border-radius:7px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; background:var(--surface-2); border:1px solid var(--border); color:var(--ink); }
+  .score-badge span { font-size:8px; font-weight:500; color:var(--muted); margin-top:2px; }
+  .entry-main { min-width:0; text-align:left; }
+  .entry-title { font-weight:600; font-size:14.5px; color:var(--ink); margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .badges { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; padding:2px 7px; border-radius:20px; color:var(--ink-secondary); background:var(--surface-2); border:1px solid var(--border); white-space:nowrap; }
+  .badge .dot { width:6px; height:6px; border-radius:50%; flex:none; } .badge.mono { font-family:"IBM Plex Mono",monospace; }
+  .badge.tag { background:var(--accent-wash); border-color:var(--accent-wash-2); color:var(--accent); font-weight:600; white-space:normal; }
+  .badge.new-badge { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700; }
+  .chevron { justify-self:end; width:18px; height:18px; color:var(--muted); } .entry.is-open .chevron { transform:rotate(180deg); }
+  .entry-body { display:grid; grid-template-rows:0fr; } .entry.is-open .entry-body { grid-template-rows:1fr; } .entry-body-inner { overflow:hidden; min-height:0; }
+  .entry-body-content { padding:14px 18px 20px 68px; border-top:1px solid var(--border); margin-top:2px; }
+  .entry-summary { font-size:13.5px; color:var(--ink-secondary); margin:0 0 12px; max-width:68ch; }
+  .entry-bullets { margin:0 0 12px; padding-left:18px; font-size:13px; color:var(--ink-secondary); } .entry-bullets li { margin-bottom:4px; }
+  .entry-insight { font-size:13px; color:var(--ink); background:var(--surface-2); border-left:2px solid var(--accent); padding:9px 12px; border-radius:0 6px 6px 0; margin:0 0 14px; max-width:68ch; }
+  .entry-insight strong { color:var(--accent); }
+  .entry-link { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; text-decoration:none; color:var(--link); } .entry-link:hover { text-decoration:underline; }
+  .rationale { font-size:11.5px; color:var(--muted); margin:-6px 0 12px; font-style:italic; }
+  .empty-state { text-align:center; padding:48px 20px; color:var(--muted); font-size:13.5px; background:var(--surface); border:1px dashed var(--border-strong); border-radius:8px; }
+  footer.note { margin-top:26px; font-size:11.5px; color:var(--muted); text-align:center; }
+  /* analysis card */
+  .analysis-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow-1); padding:18px 20px 16px; margin:0 0 22px; }
+  .analysis-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px 10px; margin:0 0 4px; } .analysis-head h2 { font-size:16px; }
+  .analysis-nav { display:flex; align-items:center; gap:6px; }
+  .analysis-nav button { all:unset; display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; border:1px solid var(--border); background:var(--surface-2); color:var(--ink); cursor:pointer; font-size:14px; }
+  .analysis-nav button:disabled { opacity:.35; cursor:default; } .analysis-nav-pos { font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--muted); min-width:42px; text-align:center; }
+  .analysis-meta { font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--muted); margin:0 0 14px; }
+  .analysis-collapse { display:grid; grid-template-rows:minmax(0,230px); overflow:hidden; position:relative; transition:grid-template-rows 220ms ease; }
+  .analysis-collapse.is-expanded { grid-template-rows:minmax(0,1fr); } .analysis-collapse-inner { overflow:hidden; min-height:0; }
+  .analysis-fade { position:absolute; left:0; right:0; bottom:0; height:64px; background:linear-gradient(to bottom, transparent, var(--surface)); pointer-events:none; } .analysis-collapse.is-expanded .analysis-fade { opacity:0; }
+  .analysis-section { margin:0 0 16px; } .analysis-section h3 { font-size:12.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); margin:0 0 8px; }
+  .analysis-section p { font-size:13.5px; margin:0; max-width:74ch; line-height:1.65; }
+  .analysis-section ul { list-style:none; margin:0; padding:0; font-size:13.5px; } .analysis-section ul li { position:relative; padding-left:26px; margin-bottom:10px; max-width:66ch; }
+  .analysis-section ul li::before { content:"\2192"; position:absolute; left:6px; top:0; color:var(--accent); font-size:12px; font-weight:700; }
+  .analysis-section.is-hype ul li::before { content:"\26A0"; color:#b45309; } .analysis-section.is-hype .analysis-item-label { color:#b45309; }
+  .analysis-section.is-shift ul li::before { content:"\21BA"; font-size:13px; }
+  .analysis-section ul.is-ordered { counter-reset:impl; } .analysis-section ul.is-ordered li { counter-increment:impl; padding-left:24px; }
+  .analysis-section ul.is-ordered li::before { content:counter(impl); left:0; width:17px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; text-align:center; background:var(--surface-2); border-radius:50%; line-height:17px; top:1px; }
+  .analysis-item-label { font-weight:700; margin-right:4px; }
+  .cite { margin-left:3px; font-size:10.5px; vertical-align:super; line-height:1; color:var(--muted); white-space:nowrap; } .cite a { color:var(--link); text-decoration:none; font-weight:700; font-family:"IBM Plex Mono",monospace; }
+  .analysis-toggle { all:unset; cursor:pointer; font-size:12.5px; font-weight:600; color:var(--link); padding:6px 14px; border-radius:20px; margin-top:10px; } .analysis-toggle:hover { background:var(--surface-2); }
+  @media (max-width:768px) {
+    .app { padding:16px 12px 50px; } * { min-width:0; } .masthead h1 { font-size:24px; } .mast-sub { font-size:13px; }
+    .filter-bar { position:static; flex-direction:column; align-items:stretch; padding:10px; gap:10px; } .filter-bar > * { width:100%; flex:1 1 100%; }
+    .cat-btn { flex:1 1 auto; justify-content:center; padding-top:8px; padding-bottom:8px; } select { width:100%; padding:9px; font-size:13px; }
+    .entry-head { grid-template-columns:28px 1fr 18px; gap:10px; padding:11px 12px; } .score-badge { width:28px; height:28px; font-size:11px; } .score-badge span { font-size:6.5px; }
+    .entry-title { white-space:normal; overflow:visible; overflow-wrap:break-word; font-size:13.5px; } .badge { font-size:10px; }
+    .entry-body-content { padding:12px 12px 16px; } .analysis-collapse { grid-template-rows:minmax(0,190px); }
+  }
+
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="masthead">
+    <div class="masthead-title-row">
+      <h1>Longevity News</h1>
+      <a class="overview-link" href="overview.html">About this site</a>
+    </div>
+    <p class="mast-sub">Human longevity research, media and interventions — aggregated, summarized and graded on evidence. Refreshed daily.</p>
+    <div class="mast-meta" id="mast-meta">Last Update: —</div>
+    <nav class="site-nav">
+      <a href="index.html">Research Watch</a>
+      <a href="interventions.html">Interventions</a>
+      <a href="media.html" class="is-current">Podcasts &amp; Video</a>
+    </nav>
+    <p class="page-tagline">Tracked longevity podcasts and channels, summarized with an evidence check on every episode.</p>
+    <div class="masthead-divider"></div>
+    <div class="disclaimer-banner" role="note">
+      <span class="icon" aria-hidden="true">⚠️</span>
+      <span><strong>Not medical advice.</strong> Everything on this site is generated by Claude AI from published sources and may contain errors. It is a research starting point, not a recommendation. Talk to your physician before starting, stopping or changing any supplement, medication, diet or exercise program.</span>
+    </div>
+    <p class="conn-banner" id="conn-state" hidden></p>
+  </header>
+  <div class="filter-section-head"><h2>Filters</h2><p class="filter-hint">Podcast episodes and YouTube videos from tracked shows. Media is treated as a source of <em>leads</em>, never as evidence — each entry carries an evidence-quality note flagging where a host or guest is running ahead of the data.</p></div>
+  <div class="filter-bar" role="search">
+    <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="search-input" type="text" placeholder="Search episodes, guests, interventions…" autocomplete="off"></div>
+    <select id="show-select" aria-label="Show"></select>
+    <select id="status-select" aria-label="Transcript status"><option value="all">Any transcript status</option><option value="complete">Transcript complete</option><option value="pending_link">Needs a link</option><option value="pending_transcript">Transcript pending</option></select>
+    <select id="interv-select" aria-label="Intervention"></select>
+    <div class="stepper"><label for="min-score">Relevance ≥</label><input type="range" id="min-score" min="1" max="10" step="1" value="1"><output id="min-score-out">1</output></div>
+    <button class="reset-btn" id="reset-btn" type="button">Reset</button>
+  </div>
+  <p class="result-line" id="result-line"></p>
+  <div class="ledger" id="ledger"></div>
+  <p class="empty-state" id="empty-state" hidden>No episodes match — or the first daily run hasn't happened yet.</p>
+  <footer class="note">Tracked shows are listed on the Admin page's source list. Episodes stuck at "Needs a link" can be fixed by pasting the YouTube URL into Admin.</footer>
+</div>
+<script>
+const SUPABASE_URL = "https://acxdvzcohjayvmqdaoke.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_2n567u9zKgZ-L-M_yGRf5Q_HEV_p1-f";
+const POLL_MS = 60000;
+let supabaseClient = null;
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+function daysAgoISO(d) { const x = new Date(); x.setDate(x.getDate() - d); return x.toISOString().slice(0, 10); }
+function fmtDate(iso) { if (!iso) return "—"; const d = new Date(iso + "T00:00:00"); return isNaN(d) ? iso : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
+function fmtDateTime(iso) { if (!iso) return "—"; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }); }
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch])); }
+function bullets(bp) { return typeof bp === "string" ? bp.split("\n").map(s => s.replace(/^-\s*/, "").trim()).filter(Boolean) : Array.isArray(bp) ? bp : []; }
+function renderConnState(status, message) { const el = document.getElementById("conn-state"); if (!el) return; if (status === "ok") { el.hidden = true; return; } el.hidden = false; el.textContent = message || ""; }
+async function fetchLastRun() {
+  try { const { data } = await supabaseClient.from("longevity_pipeline_runs").select("run_completed_at").order("run_completed_at", { ascending: false }).limit(1); return data && data[0] ? data[0].run_completed_at : null; } catch { return null; }
+}
+function setLastUpdate(candidates) {
+  const ts = candidates.filter(Boolean).map(t => new Date(t).getTime()).filter(t => !isNaN(t));
+  document.getElementById("mast-meta").textContent = ts.length ? `Last Update: ${fmtDateTime(new Date(Math.max(...ts)).toISOString())}` : "Last Update: —";
+}
+function initClient() {
+  if (typeof window.supabase === "undefined" || !window.supabase.createClient) { renderConnState("error", "Couldn't load the Supabase client library. Check your connection and reload."); return false; }
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); return true;
+}
+/* ---- shared analysis card renderer ---- */
+function normalizeRefs(it) { if (Array.isArray(it.source_refs)) return it.source_refs; if (Array.isArray(it.article_ids)) return it.article_ids.map(id => ({ type: "article", id })); return []; }
+function citeMarks(idx, refs) {
+  if (!Array.isArray(refs) || !refs.length) return "";
+  const links = refs.map(ref => { const key = `${ref.type}:${ref.id}`; if (!idx.has(key)) idx.set(key, idx.size + 1); const n = idx.get(key);
+    if (ref.type === "episode") return `<a href="media.html#episode-${ref.id}" title="Open source episode">${n}</a>`;
+    if (ref.type === "intervention") return `<a href="interventions.html#intervention-${ref.id}" title="Open intervention">${n}</a>`;
+    return `<a href="index.html#article-${ref.id}" onclick="return (window.jumpToArticle ? jumpToArticle(${ref.id}, event) : true)" title="Jump to source">${n}</a>`; }).join(",");
+  return ` <span class="cite">[${links}]</span>`;
+}
+function renderCitedList(items, idx) { if (!Array.isArray(items)) return ""; return items.map(it => typeof it === "string" ? `<li>${esc(it)}</li>` : `<li>${it.label ? `<span class="analysis-item-label">${esc(it.label)}:</span> ` : ""}${esc(it.text)}${citeMarks(idx, normalizeRefs(it))}</li>`).join(""); }
+function renderCitedParagraph(items, idx) { if (!items) return ""; if (typeof items === "string") return esc(items); return items.map(it => typeof it === "string" ? esc(it) : `${esc(it.text)}${citeMarks(idx, normalizeRefs(it))}`).join(" "); }
+let analysisHistory = [], analysisIndex = 0;
+function renderAnalysis(row) {
+  const card = document.getElementById("analysis-card"); if (!card) return;
+  if (!row || !row.analysis) { card.hidden = true; return; }
+  const a = row.analysis; card.hidden = false;
+  document.getElementById("analysis-title").textContent = `6-Week Research Synthesis as of ${fmtDateTime(row.inserted_at)}`;
+  const parts = []; if (a.article_count != null) parts.push(`${a.article_count} article${a.article_count === 1 ? "" : "s"}`); if (a.episode_count) parts.push(`${a.episode_count} episode${a.episode_count === 1 ? "" : "s"}`);
+  document.getElementById("analysis-meta").textContent = `${a.period_label ? `Last 6 Weeks (${a.period_label})` : "Last 6 Weeks"}${parts.length ? ` • ${parts.join(" + ")} analyzed` : ""}`;
+  const idx = new Map();
+  document.getElementById("analysis-summary").innerHTML = renderCitedParagraph(a.executive_summary, idx);
+  const sec = (id, items) => { const ul = document.getElementById(id); ul.innerHTML = renderCitedList(items, idx); ul.closest(".analysis-section").hidden = !(items && items.length); };
+  sec("analysis-shifts", a.notable_shifts); sec("analysis-findings", a.key_findings); sec("analysis-hype", a.hype_watch); sec("analysis-implications", a.practical_implications);
+}
+function updateAnalysisNav() { const nav = document.getElementById("analysis-nav"); if (analysisHistory.length <= 1) { nav.hidden = true; return; } nav.hidden = false; document.getElementById("analysis-prev").disabled = analysisIndex >= analysisHistory.length - 1; document.getElementById("analysis-next").disabled = analysisIndex <= 0; document.getElementById("analysis-nav-pos").textContent = `${analysisIndex + 1} of ${analysisHistory.length}`; }
+function showAnalysisAt(i) { if (i < 0 || i >= analysisHistory.length) return; analysisIndex = i; renderAnalysis(analysisHistory[i]); updateAnalysisNav(); }
+async function initAnalysis() {
+  const card = document.getElementById("analysis-card"); if (!card) return;
+  document.getElementById("analysis-prev").addEventListener("click", () => showAnalysisAt(analysisIndex + 1));
+  document.getElementById("analysis-next").addEventListener("click", () => showAnalysisAt(analysisIndex - 1));
+  const toggle = document.getElementById("analysis-toggle"), collapse = document.getElementById("analysis-collapse");
+  toggle.addEventListener("click", () => { const x = collapse.classList.toggle("is-expanded"); toggle.textContent = x ? "See less" : "See more"; });
+  try { const { data } = await supabaseClient.from("longevity_synthesis").select("analysis_date, analysis, inserted_at").order("inserted_at", { ascending: false }).limit(11);
+    analysisHistory = data || []; analysisIndex = 0; renderAnalysis(analysisHistory[0] || null); updateAnalysisNav(); } catch { renderAnalysis(null); }
+}
+
+let DATA=[]; const state={search:"",show:"all",status:"all",interv:"all",minScore:1};
+const STATUS_LABEL={complete:"Transcript ✓",pending_link:"Needs link",pending_transcript:"Transcript pending",unavailable:"Unavailable"};
+function fillSelect(id,label,values,key){ const s=document.getElementById(id); s.innerHTML=`<option value="all">${label}</option>`+values.map(v=>`<option value="${esc(v)}"${v===state[key]?" selected":""}>${esc(v)}</option>`).join(""); }
+function renderSelects(){ fillSelect("show-select","All shows",[...new Set(DATA.map(r=>r.show_name))].sort(),"show"); fillSelect("interv-select","All interventions",[...new Set(DATA.flatMap(r=>r.related_interventions||[]))].sort(),"interv"); }
+function wire(){ document.getElementById("show-select").addEventListener("change",e=>{state.show=e.target.value;applyFilters();}); document.getElementById("status-select").addEventListener("change",e=>{state.status=e.target.value;applyFilters();}); document.getElementById("interv-select").addEventListener("change",e=>{state.interv=e.target.value;applyFilters();}); document.getElementById("min-score").addEventListener("input",e=>{state.minScore=+e.target.value;document.getElementById("min-score-out").textContent=e.target.value;applyFilters();}); document.getElementById("search-input").addEventListener("input",e=>{state.search=e.target.value.trim().toLowerCase();applyFilters();}); document.getElementById("reset-btn").addEventListener("click",()=>{Object.assign(state,{search:"",show:"all",status:"all",interv:"all",minScore:1});document.getElementById("search-input").value="";document.getElementById("status-select").value="all";document.getElementById("min-score").value=1;document.getElementById("min-score-out").textContent="1";renderAll();}); }
+function renderLedger(){
+  const open=new Set([...document.querySelectorAll(".entry.is-open")].map(e=>e.dataset.id)); const today=todayISO();
+  document.getElementById("ledger").innerHTML=DATA.map(r=>{ const iv=r.related_interventions||[]; const guests=r.guests||[]; const score=r.relevance_score; const isNew=r.date_found===today;
+    return `<article class="entry" id="episode-${r.id}" data-id="${r.id}" data-show="${esc(r.show_name)}" data-status="${r.transcript_status}" data-score="${score==null?0:score}" data-interv="${esc(iv.join("||"))}" data-search="${esc((r.title+" "+guests.join(" ")+" "+iv.join(" ")+" "+(r.summary||"")).toLowerCase())}">
+      <button class="entry-head" type="button" aria-expanded="false">
+        <div class="score-badge" title="Relevance">${score==null?"—":score}<span>REL</span></div>
+        <div class="entry-main"><p class="entry-title">${r.episode_number?`#${r.episode_number} · `:""}${esc(r.title)}</p><div class="badges">
+          ${isNew?`<span class="badge new-badge">🆕 New</span>`:""}<span class="badge tag">${esc(r.show_name)}</span><span class="badge">${r.media_type}</span>
+          <span class="badge">${STATUS_LABEL[r.transcript_status]||r.transcript_status}</span>
+          ${guests.map(g=>`<span class="badge">${esc(g)}</span>`).join("")}${iv.map(i=>`<span class="badge">${esc(i)}</span>`).join("")}
+          <span class="badge mono">Published ${fmtDate(r.publish_date)}</span>
+        </div></div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="entry-body"><div class="entry-body-inner"><div class="entry-body-content">
+        ${r.summary?`<p class="entry-summary">${esc(r.summary)}</p>`:`<p class="entry-summary" style="color:var(--muted)">No transcript yet — summary will appear once one is fetched.</p>`}
+        <ul class="entry-bullets">${bullets(r.bullet_points).map(b=>`<li>${esc(b)}</li>`).join("")}</ul>
+        ${r.evidence_quality_note?`<p class="entry-insight" style="border-left-color:#b45309"><strong style="color:#b45309">Evidence check —</strong> ${esc(r.evidence_quality_note)}</p>`:""}
+        ${r.practical_takeaway?`<p class="entry-insight"><strong>Practical takeaway —</strong> ${esc(r.practical_takeaway)}</p>`:""}
+        <div style="display:flex;gap:14px;flex-wrap:wrap"><a class="entry-link" href="${esc(r.link)}" target="_blank" rel="noopener">Episode page ↗</a>${r.youtube_url?`<a class="entry-link" href="${esc(r.youtube_url)}" target="_blank" rel="noopener">YouTube ↗</a>`:""}${r.apple_podcasts_url?`<a class="entry-link" href="${esc(r.apple_podcasts_url)}" target="_blank" rel="noopener">Apple ↗</a>`:""}${r.spotify_url?`<a class="entry-link" href="${esc(r.spotify_url)}" target="_blank" rel="noopener">Spotify ↗</a>`:""}</div>
+      </div></div></div></article>`; }).join("");
+  document.querySelectorAll(".entry").forEach(e=>{ if(open.has(e.dataset.id)) e.classList.add("is-open"); e.querySelector(".entry-head").addEventListener("click",()=>{const o=e.classList.toggle("is-open");e.querySelector(".entry-head").setAttribute("aria-expanded",o);}); });
+}
+function applyFilters(){ let n=0; document.querySelectorAll(".entry").forEach(e=>{ const iv=e.dataset.interv.split("||").filter(Boolean); const m=(state.show==="all"||e.dataset.show===state.show)&&(state.status==="all"||e.dataset.status===state.status)&&(state.interv==="all"||iv.includes(state.interv))&&(+e.dataset.score>=state.minScore||(state.minScore===1))&&(!state.search||e.dataset.search.includes(state.search)); e.hidden=!m; if(m)n++; }); document.getElementById("result-line").innerHTML=`Showing <strong>${n}</strong> of ${DATA.length} episodes`; document.getElementById("empty-state").hidden=n!==0; }
+function renderAll(){ renderSelects(); renderLedger(); applyFilters(); }
+async function fetchData(){ const [{data,error},lastRun]=await Promise.all([supabaseClient.from("longevity_media").select("id, show_name, media_type, episode_number, title, publish_date, link, youtube_url, apple_podcasts_url, spotify_url, transcript_status, summary, bullet_points, practical_takeaway, evidence_quality_note, relevance_score, guests, related_interventions, date_found, inserted_at").order("publish_date",{ascending:false}),fetchLastRun()]); if(error){renderConnState("error",`Couldn't reach Supabase (${error.message}).`);return;} DATA=data||[]; setLastUpdate(DATA.map(r=>r.inserted_at).concat([lastRun])); renderConnState("ok"); renderAll();
+  if(location.hash.startsWith("#episode-")){const e=document.getElementById(location.hash.slice(1)); if(e){e.classList.add("is-open");e.scrollIntoView({behavior:"smooth"});}} }
+function boot(){ renderConnState("loading","Connecting to Supabase…"); if(!initClient())return; wire(); fetchData(); setInterval(fetchData,POLL_MS); }
+boot();
+</script>
+</body>
+</html>
