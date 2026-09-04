@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Research Watch — Longevity News</title>
+<title>State of the Science — Longevity News</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -121,6 +121,29 @@
     .entry-body-content { padding:12px 12px 16px; } .analysis-collapse { grid-template-rows:minmax(0,190px); }
   }
 
+  .sos-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:0 0 14px; }
+  .sos-version { font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted); }
+  .sos-jump { display:flex; gap:6px; flex-wrap:wrap; }
+  .sos-jump a { font-size:12px; font-weight:600; text-decoration:none; color:var(--ink-secondary); background:var(--surface); border:1px solid var(--border); padding:5px 10px; border-radius:20px; }
+  .sos-jump a:hover { border-color:var(--accent); color:var(--accent); }
+  .framing { font-size:15px; color:var(--ink-secondary); max-width:76ch; line-height:1.65; margin:0 0 24px; }
+  .sos-section { margin:0 0 30px; scroll-margin-top:20px; }
+  .sos-section > h2 { font-size:20px; margin:0 0 6px; }
+  .sos-intro { font-size:13.5px; color:var(--muted); max-width:72ch; margin:0 0 14px; }
+  .claim { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin:0 0 8px; box-shadow:var(--shadow-1); }
+  .claim-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
+  .claim-head h3 { font-size:14.5px; }
+  .conf { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:2px 8px; border-radius:20px; color:#fff; white-space:nowrap; }
+  .claim p { margin:0; font-size:13.5px; color:var(--ink-secondary); line-height:1.6; max-width:78ch; }
+  .tier { border-left:4px solid var(--t); background:var(--surface); border-radius:8px; padding:14px 16px; margin:0 0 12px; box-shadow:var(--shadow-1); }
+  .tier h3 { font-size:15px; display:flex; align-items:center; gap:10px; }
+  .tier h3 .tl { font-family:"IBM Plex Mono",monospace; font-size:12px; background:var(--t); color:#fff; border-radius:6px; padding:2px 8px; }
+  .tier .rat { font-size:12.5px; color:var(--muted); margin:4px 0 10px; }
+  .tier ul { margin:0; padding:0; list-style:none; } .tier li { font-size:13.5px; padding:6px 0; border-top:1px solid var(--border); line-height:1.55; max-width:78ch; }
+  .tier li strong { color:var(--ink); }
+  .policy { background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:14px 16px; font-size:13.5px; color:var(--ink-secondary); line-height:1.6; max-width:78ch; }
+  .changelog li { font-size:13px; padding:8px 0; border-top:1px solid var(--border); } .changelog .d { font-family:"IBM Plex Mono",monospace; color:var(--muted); font-size:11.5px; margin-right:8px; }
+  .changelog .why { color:var(--muted); display:block; margin-top:2px; }
 
 </style>
 </head>
@@ -134,12 +157,12 @@
     <p class="mast-sub">Human longevity research, media and interventions — aggregated, summarized and graded on evidence. Refreshed daily.</p>
     <div class="mast-meta" id="mast-meta">Last Update: —</div>
     <nav class="site-nav">
-      <a href="baseline.html">State of the Science</a>
-      <a href="index.html" class="is-current">Research Watch</a>
+      <a href="baseline.html" class="is-current">State of the Science</a>
+      <a href="index.html">Research Watch</a>
       <a href="interventions.html">Interventions</a>
       <a href="media.html">Podcasts &amp; Video</a>
     </nav>
-    <p class="page-tagline">Papers, preprints, trial results and reporting on human longevity — graded on evidence and relevance.</p>
+    <p class="page-tagline">Where things stand today on living long and well — the baseline every new finding is measured against, and the instruction manual that follows from it.</p>
     <div class="masthead-divider"></div>
     <div class="disclaimer-banner" role="note">
       <span class="icon" aria-hidden="true">⚠️</span>
@@ -147,47 +170,19 @@
     </div>
     <p class="conn-banner" id="conn-state" hidden></p>
   </header>
-    <section class="analysis-card" id="analysis-card" hidden>
-    <div class="analysis-head">
-      <h2 id="analysis-title">6-Week Research Synthesis as of —</h2>
-      <div class="analysis-nav" id="analysis-nav" hidden>
-        <button id="analysis-prev" type="button" aria-label="Earlier synthesis">‹</button>
-        <span class="analysis-nav-pos" id="analysis-nav-pos"></span>
-        <button id="analysis-next" type="button" aria-label="Newer synthesis">›</button>
-      </div>
-    </div>
-    <p class="analysis-meta" id="analysis-meta"></p>
-    <div class="analysis-collapse" id="analysis-collapse">
-      <div class="analysis-collapse-inner">
-        <div class="analysis-section"><h3>Executive Summary</h3><p id="analysis-summary"></p></div>
-        <div class="analysis-section is-shift" hidden><h3>Shifts From Recent Syntheses</h3><ul id="analysis-shifts"></ul></div>
-        <div class="analysis-section"><h3>Key Findings</h3><ul id="analysis-findings"></ul></div>
-        <div class="analysis-section is-hype"><h3>Hype Watch — claims outrunning the evidence</h3><ul id="analysis-hype"></ul></div>
-        <div class="analysis-section"><h3>Practical Implications</h3><ul id="analysis-implications" class="is-ordered"></ul></div>
-      </div>
-      <div class="analysis-fade"></div>
-    </div>
-    <button class="analysis-toggle" id="analysis-toggle" type="button">See more</button>
-  </section>
-
-  <div class="filter-section-head"><h2>Filters</h2><p class="filter-hint">Search, evidence tier, study type, source, intervention and relevance all combine to narrow the list. Reset clears everything.</p></div>
-  <p class="priority-note">Two independent scores on every item: <strong>Evidence tier</strong> (1 = human RCT / meta-analysis … 5 = opinion or unverified claim) says how much to trust it; <strong>Relevance</strong> (1–10) says how much it should change what you actually do. A tier-5 podcast claim can be highly relevant — as something to watch, not act on.</p>
-  <div class="filter-bar" role="search">
-    <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="search-input" type="text" placeholder="Search title, summary, intervention…" autocomplete="off"></div>
-    <div class="cat-toggle" id="cat-toggle" role="group" aria-label="Filter by evidence tier"></div>
-    <select id="study-select" aria-label="Study type"></select>
-    <select id="source-select" aria-label="Source"></select>
-    <select id="interv-select" aria-label="Intervention"></select>
-    <div class="stepper"><label for="min-score">Relevance ≥</label><input type="range" id="min-score" min="1" max="10" step="1" value="1"><output id="min-score-out">1</output></div>
-    <select id="sort-select" aria-label="Sort">
-      <option value="added_desc" selected>Sort: newest added</option><option value="pub_desc">Sort: newest published</option><option value="relevance">Sort: relevance, high to low</option><option value="evidence">Sort: strongest evidence first</option>
-    </select>
-    <button class="reset-btn" id="reset-btn" type="button">Reset</button>
+  <div class="sos-toolbar">
+    <div class="sos-version" id="sos-version">Loading…</div>
+    <nav class="sos-jump"><a href="#manual">Instruction manual</a><a href="#settled">What's established</a><a href="#contested">What changed</a><a href="#frontier">Cutting edge</a><a href="#changelog">Changelog</a></nav>
   </div>
-  <p class="result-line" id="result-line"></p>
-  <div class="ledger" id="ledger"></div>
-  <p class="empty-state" id="empty-state" hidden>No entries match these filters — or the first daily run hasn't happened yet.</p>
-  <footer class="note">Sources include Nature Aging, Aging Cell, GeroScience, J Gerontol A, Lancet Healthy Longevity, PubMed, bioRxiv/medRxiv, ClinicalTrials.gov and longevity news outlets. Reads live from Supabase and refreshes about once a minute.</footer>
+  <div class="analysis-nav" id="analysis-nav" hidden style="margin:-6px 0 14px">
+    <button id="v-prev" type="button" aria-label="Earlier version">‹</button><span class="analysis-nav-pos" id="v-pos"></span><button id="v-next" type="button" aria-label="Newer version">›</button>
+  </div>
+  <p class="framing" id="framing"></p>
+  <section class="sos-section" id="manual"><h2>The instruction manual</h2><p class="sos-intro">What to actually do, ranked by how sure we are. Tier A is the evidence-heavy core; Tier C is the honest "knock yourself out" list; Tier D is the don't list.</p><div id="manual-body"></div></section>
+  <div id="sections-body"></div>
+  <section class="sos-section" id="policy"><h2>How this document changes</h2><div class="policy" id="policy-body"></div></section>
+  <section class="sos-section" id="changelog"><h2>Changelog</h2><p class="sos-intro">Every revision, newest first, with the evidence that prompted it.</p><ul class="changelog" id="changelog-body" style="padding:0;list-style:none"></ul></section>
+  <footer class="note">This baseline is versioned and append-only. The daily research run compares new tier-1 and tier-2 evidence against the current version and proposes a new version only when a claim, confidence level or instruction should change.</footer>
 </div>
 <script>
 const SUPABASE_URL = "https://acxdvzcohjayvmqdaoke.supabase.co";
@@ -249,75 +244,23 @@ async function initAnalysis() {
     analysisHistory = data || []; analysisIndex = 0; renderAnalysis(analysisHistory[0] || null); updateAnalysisNav(); } catch { renderAnalysis(null); }
 }
 
-let DATA = [];
-const TIERS = [1,2,3,4,5];
-const TIER_LABEL = {1:"T1 Human RCT/Meta", 2:"T2 Human Observ.", 3:"T3 Animal", 4:"T4 Mechanistic", 5:"T5 Opinion/Claim"};
-const TIER_SHORT = {1:"RCT", 2:"Obs", 3:"Animal", 4:"Mech", 5:"Claim"};
-const state = { search:"", tier:"all", study:"all", source:"all", interv:"all", minScore:1, sortBy:"added_desc" };
-function renderTierToggle() {
-  const el = document.getElementById("cat-toggle");
-  const items = [["all","All",DATA.length]].concat(TIERS.map(t => [String(t), TIER_LABEL[t], DATA.filter(r => r.evidence_tier === t).length]));
-  el.innerHTML = items.map(([k,l,c]) => `<button type="button" class="cat-btn ${k===state.tier?"is-active":""}" data-cat="${k}"><span class="dot" style="background:var(--tier-${k})"></span>${l} <span style="color:var(--muted)">${c}</span></button>`).join("");
-  el.querySelectorAll(".cat-btn").forEach(b => b.addEventListener("click", () => { state.tier = b.dataset.cat; el.querySelectorAll(".cat-btn").forEach(x => x.classList.toggle("is-active", x===b)); applyFilters(); }));
+let VERSIONS=[], vi=0;
+const CONF_COLOR = c => { c=(c||"").toLowerCase(); if(c.startsWith("settled (neg")) return "var(--v-avoid)"; if(c.startsWith("settled")) return "var(--tier-1)"; if(c.startsWith("strong")) return "var(--tier-1)"; if(c.startsWith("moderate")) return "var(--tier-2)"; if(c.startsWith("contested")) return "var(--tier-3)"; return "var(--tier-5)"; };
+const TIER_COLOR = { A:"var(--v-supported)", B:"var(--tier-2)", C:"var(--v-lowdown)", D:"var(--v-avoid)" };
+function refs(r){ if(!Array.isArray(r)||!r.length) return ""; return ` <span class="cite">[${r.map((x,i)=>x.type==="episode"?`<a href="media.html#episode-${x.id}">${i+1}</a>`:x.type==="intervention"?`<a href="interventions.html#intervention-${x.id}">${i+1}</a>`:`<a href="index.html#article-${x.id}">${i+1}</a>`).join(",")}]</span>`; }
+function render(row){
+  const d=row.document;
+  document.getElementById("sos-version").textContent=`Version ${row.version} · published ${fmtDateTime(row.published_at)}${row.revision_reason?` · ${row.revision_reason}`:""}`;
+  document.getElementById("framing").textContent=d.framing||"";
+  document.getElementById("manual-body").innerHTML=(d.instruction_manual||[]).map(t=>`<div class="tier" style="--t:${TIER_COLOR[t.tier]||"var(--muted)"}"><h3><span class="tl">Tier ${esc(t.tier)}</span>${esc(t.heading)}</h3><p class="rat">${esc(t.rationale||"")}</p><ul>${(t.items||[]).map(i=>`<li><strong>${esc(i.label)}.</strong> ${esc(i.text)}${refs(i.source_refs)}</li>`).join("")}</ul></div>`).join("");
+  document.getElementById("sections-body").innerHTML=(d.sections||[]).map(s=>`<section class="sos-section" id="${esc(s.key)}"><h2>${esc(s.heading)}</h2><p class="sos-intro">${esc(s.intro||"")}</p>${(s.items||[]).map(i=>`<div class="claim"><div class="claim-head"><h3>${esc(i.label)}</h3><span class="conf" style="background:${CONF_COLOR(i.confidence)}">${esc(i.confidence||"")}</span></div><p>${esc(i.text)}${refs(i.source_refs)}</p></div>`).join("")}</section>`).join("");
+  document.getElementById("policy-body").textContent=d.revision_policy||"";
+  const all=VERSIONS.flatMap(v=>(v.changelog||[]).map(c=>({...c,version:v.version}))).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||b.version-a.version);
+  document.getElementById("changelog-body").innerHTML=all.map(c=>`<li><span class="d">${esc(c.date||"")} · v${c.version}</span><strong>${esc(c.change)}</strong>${refs(c.source_refs)}<span class="why">${esc(c.reason||"")}</span></li>`).join("")||"<li>No revisions yet.</li>";
+  const nav=document.getElementById("analysis-nav"); nav.hidden=VERSIONS.length<=1; document.getElementById("v-prev").disabled=vi>=VERSIONS.length-1; document.getElementById("v-next").disabled=vi<=0; document.getElementById("v-pos").textContent=`v${row.version}`;
 }
-function fillSelect(id, label, values, key) { const s = document.getElementById(id); const cur = state[key]; s.innerHTML = `<option value="all">${label}</option>` + values.map(v => `<option value="${esc(v)}"${v===cur?" selected":""}>${esc(v)}</option>`).join(""); }
-function renderSelects() {
-  fillSelect("study-select","All study types",[...new Set(DATA.map(r=>r.study_type))].sort(),"study");
-  fillSelect("source-select","All sources",[...new Set(DATA.map(r=>r.source_site))].sort(),"source");
-  fillSelect("interv-select","All interventions",[...new Set(DATA.flatMap(r=>r.related_interventions||[]))].sort(),"interv");
-}
-function wireControls() {
-  document.getElementById("study-select").addEventListener("change", e => { state.study = e.target.value; applyFilters(); });
-  document.getElementById("source-select").addEventListener("change", e => { state.source = e.target.value; applyFilters(); });
-  document.getElementById("interv-select").addEventListener("change", e => { state.interv = e.target.value; applyFilters(); });
-  document.getElementById("min-score").addEventListener("input", e => { state.minScore = +e.target.value; document.getElementById("min-score-out").textContent = e.target.value; applyFilters(); });
-  document.getElementById("search-input").addEventListener("input", e => { state.search = e.target.value.trim().toLowerCase(); applyFilters(); });
-  document.getElementById("sort-select").addEventListener("change", e => { state.sortBy = e.target.value; renderLedger(); applyFilters(); });
-  document.getElementById("reset-btn").addEventListener("click", () => { Object.assign(state, { search:"", tier:"all", study:"all", source:"all", interv:"all", minScore:1, sortBy:"added_desc" }); document.getElementById("search-input").value=""; document.getElementById("min-score").value=1; document.getElementById("min-score-out").textContent="1"; document.getElementById("sort-select").value="added_desc"; renderAll(); });
-}
-function sortedData() { const a=[...DATA]; if (state.sortBy==="added_desc") a.sort((x,y)=>(y.date_found||"").localeCompare(x.date_found||"")||(y.id-x.id)); else if (state.sortBy==="pub_desc") a.sort((x,y)=>(y.source_publish_date||"").localeCompare(x.source_publish_date||"")); else if (state.sortBy==="relevance") a.sort((x,y)=>y.relevance_score-x.relevance_score); else a.sort((x,y)=>x.evidence_tier-y.evidence_tier||y.relevance_score-x.relevance_score); return a; }
-function renderLedger() {
-  const openIds = new Set([...document.querySelectorAll(".entry.is-open")].map(e=>e.dataset.id)); const today = todayISO();
-  document.getElementById("ledger").innerHTML = sortedData().map(r => {
-    const interv = r.related_interventions||[]; const isNew = r.date_found===today;
-    return `<article class="entry" id="article-${r.id}" data-id="${r.id}" data-tier="${r.evidence_tier}" data-study="${esc(r.study_type)}" data-source="${esc(r.source_site)}" data-score="${r.relevance_score}" data-interv="${esc(interv.join("||"))}" data-search="${esc((r.article_title+" "+(r.summary||"")+" "+interv.join(" ")).toLowerCase())}">
-      <button class="entry-head" type="button" aria-expanded="false">
-        <div class="score-badge" title="Relevance ${r.relevance_score}/10">${r.relevance_score}<span>REL</span></div>
-        <div class="entry-main"><p class="entry-title">${esc(r.article_title)}</p><div class="badges">
-          ${isNew?`<span class="badge new-badge">🆕 New</span>`:""}
-          <span class="badge"><span class="dot" style="background:var(--tier-${r.evidence_tier})"></span>Tier ${r.evidence_tier} · ${TIER_SHORT[r.evidence_tier]}</span>
-          <span class="badge">${esc(r.content_type)}</span><span class="badge">${esc(r.study_type)}</span>
-          ${interv.map(i=>`<span class="badge tag">${esc(i)}</span>`).join("")}
-          <span class="badge">${esc(r.source_site)}</span><span class="badge mono">Published ${fmtDate(r.source_publish_date)}</span><span class="badge mono">Added ${fmtDate(r.date_found)}</span>
-        </div></div>
-        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-      </button>
-      <div class="entry-body"><div class="entry-body-inner"><div class="entry-body-content">
-        ${r.score_rationale?`<p class="rationale"><strong>Why this score —</strong> ${esc(r.score_rationale)}</p>`:""}
-        <p class="entry-summary">${esc(r.summary)}</p>
-        <ul class="entry-bullets">${bullets(r.bullet_points).map(b=>`<li>${esc(b)}</li>`).join("")}</ul>
-        ${r.practical_takeaway?`<p class="entry-insight"><strong>Practical takeaway —</strong> ${esc(r.practical_takeaway)}</p>`:""}
-        <a class="entry-link" href="${esc(r.link)}" target="_blank" rel="noopener">Read source ↗</a>
-      </div></div></div></article>`; }).join("");
-  document.querySelectorAll(".entry").forEach(e => { if (openIds.has(e.dataset.id)) { e.classList.add("is-open"); } e.querySelector(".entry-head").addEventListener("click", () => { const o=e.classList.toggle("is-open"); e.querySelector(".entry-head").setAttribute("aria-expanded", o); }); });
-}
-function jumpToArticle(id, evt) { if (evt) evt.preventDefault(); let e=document.getElementById("article-"+id); if (!e) return false; if (e.hidden) { document.getElementById("reset-btn").click(); e=document.getElementById("article-"+id); } e.classList.add("is-open"); e.scrollIntoView({behavior:"smooth",block:"start"}); e.classList.remove("is-highlighted"); void e.offsetWidth; e.classList.add("is-highlighted"); return false; }
-window.jumpToArticle = jumpToArticle;
-function applyFilters() {
-  let n=0; document.querySelectorAll(".entry").forEach(e => { const iv=e.dataset.interv.split("||").filter(Boolean);
-    const m = (state.tier==="all"||e.dataset.tier===state.tier) && (state.study==="all"||e.dataset.study===state.study) && (state.source==="all"||e.dataset.source===state.source) && (state.interv==="all"||iv.includes(state.interv)) && (+e.dataset.score>=state.minScore) && (!state.search||e.dataset.search.includes(state.search));
-    e.hidden=!m; if (m) n++; });
-  document.getElementById("result-line").innerHTML = `Showing <strong>${n}</strong> of ${DATA.length} entries`; document.getElementById("empty-state").hidden = n!==0;
-}
-function renderAll() { renderTierToggle(); renderSelects(); renderLedger(); applyFilters(); }
-async function fetchArticles() {
-  const [{ data, error }, lastRun] = await Promise.all([ supabaseClient.from("longevity_articles").select("*").order("date_found",{ascending:false}).order("relevance_score",{ascending:false}), fetchLastRun() ]);
-  if (error) { renderConnState("error", DATA.length ? `Couldn't refresh (${error.message}) — showing last loaded data.` : `Couldn't reach Supabase (${error.message}). Retrying.`); return; }
-  DATA = (data||[]).map(r => ({...r, evidence_tier:+r.evidence_tier, relevance_score:+r.relevance_score}));
-  setLastUpdate(DATA.map(r=>r.inserted_at).concat([lastRun])); renderConnState("ok"); renderAll();
-  if (location.hash.startsWith("#article-")) jumpToArticle(location.hash.slice(9));
-}
-function boot() { renderConnState("loading","Connecting to Supabase…"); if (!initClient()) return; const q=new URLSearchParams(location.search).get("q"); if (q) { state.search=q.toLowerCase(); document.getElementById("search-input").value=q; } wireControls(); initAnalysis(); fetchArticles(); setInterval(fetchArticles, POLL_MS); document.addEventListener("visibilitychange", () => { if (document.visibilityState==="visible") fetchArticles(); }); }
+async function load(){ const {data,error}=await supabaseClient.from("longevity_state_of_science").select("*").order("version",{ascending:false}).limit(25); if(error||!data||!data.length){renderConnState("error","Couldn't load the baseline.");return;} VERSIONS=data; vi=0; renderConnState("ok"); render(VERSIONS[0]); setLastUpdate([VERSIONS[0].published_at]); if(location.hash){const e=document.querySelector(location.hash); if(e) e.scrollIntoView();} }
+function boot(){ renderConnState("loading","Connecting to Supabase…"); if(!initClient())return; document.getElementById("v-prev").addEventListener("click",()=>{if(vi<VERSIONS.length-1){vi++;render(VERSIONS[vi]);}}); document.getElementById("v-next").addEventListener("click",()=>{if(vi>0){vi--;render(VERSIONS[vi]);}}); load(); }
 boot();
 </script>
 </body>
