@@ -132,14 +132,23 @@
   .mx h3 { font-size:13px; display:flex; align-items:center; gap:7px; margin-bottom:4px; } .mx h3 .dot { width:9px; height:9px; border-radius:50%; background:var(--v-color); }
   .mx p { margin:0; font-size:11.5px; color:var(--muted); line-height:1.4; } .mx .n { font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-secondary); margin-top:6px; }
   .v-badge { font-weight:700; color:var(--accent-ink); border:none; }
-  .axes { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 12px; }
+  .axes { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin:0 0 12px; }
+  .scope-toggle { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 2px 12px; }
+  .scope-toggle .scope-hint { font-size:12px; color:var(--muted); margin:0; max-width:70ch; }
+  .badge.scope-better { background:var(--accent-wash); border-color:var(--accent-wash-2); color:var(--accent); font-weight:600; }
+  .badge.scope-longer { background:var(--ok-wash); border-color:var(--ok-wash-2); color:var(--ok); font-weight:600; }
+  .badge.mort-null, .badge.mort-animal, .badge.mort-none { color:var(--muted); }
+  .scope-note { font-size:12.5px; color:var(--ink-secondary); background:var(--surface-2); border-left:2px solid var(--ok); padding:8px 12px; border-radius:0 6px 6px 0; margin:0 0 12px; max-width:68ch; }
+  .scope-note .k { font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); display:block; margin-bottom:2px; }
+  .longer-note { display:none; font-size:12.5px; color:var(--ink-secondary); background:var(--ok-wash); border:1px solid var(--ok-wash-2); border-radius:8px; padding:10px 14px; margin:0 0 12px; line-height:1.5; }
+  .longer-note.is-visible { display:block; }
   .axis { background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:8px 10px; font-size:12.5px; }
   .axis .k { font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); display:block; margin-bottom:2px; }
   .axis .v { font-weight:700; } .axis p { margin:6px 0 0; color:var(--ink-secondary); }
   .facts { display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; font-size:12.5px; margin:0 0 12px; } .facts div { padding:6px 0; border-bottom:1px solid var(--border); }
   .facts .k { font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); display:block; }
   .one-line { font-size:14px; color:var(--ink); margin:0 0 12px; font-weight:500; max-width:70ch; }
-  @media (max-width:768px) { .matrix { grid-template-columns:1fr 1fr; } .axes, .facts { grid-template-columns:1fr; } }
+  @media (max-width:768px) { .matrix { grid-template-columns:1fr 1fr; } .axes, .facts { grid-template-columns:1fr; } .scope-toggle .cat-btn { white-space:normal; } }
 
 </style>
 </head>
@@ -167,14 +176,24 @@
     </div>
     <p class="conn-banner" id="conn-state" hidden></p>
   </header>
-  <div class="filter-section-head"><h2>How to read this page</h2><p class="filter-hint">Every intervention is graded on two independent questions: <strong>Does it work?</strong> and <strong>Does it hurt anything?</strong> The verdict is the combination. Click a verdict card to filter.</p></div>
+  <div class="filter-section-head"><h2>How to read this page</h2><p class="filter-hint">This site tries to answer two different questions: <strong>what helps me live better</strong> and <strong>what helps me live longer</strong>. Every intervention is tagged with which question it's aimed at, and graded on two independent axes — <strong>Does it work?</strong> and <strong>Does it hurt anything?</strong> — plus a third: <strong>Does it extend life?</strong>, which only counts human all-cause mortality data. Click a verdict card to filter.</p></div>
+  <div class="scope-toggle" role="tablist" aria-label="Live better or live longer">
+    <div class="cat-toggle">
+      <button class="cat-btn is-active" data-scope="all" type="button">All</button>
+      <button class="cat-btn" data-scope="better" type="button"><span class="dot" style="background:var(--accent)"></span>Live Better</button>
+      <button class="cat-btn" data-scope="longer" type="button"><span class="dot" style="background:var(--ok)"></span>Live Longer</button>
+      <button class="cat-btn" data-scope="claimed" type="button"><span class="dot" style="background:var(--muted)"></span>Claims Longer, Unproven</button>
+    </div>
+    <p class="scope-hint"><strong>Live Better</strong> = aimed at function, disease risk or quality of life. <strong>Live Longer</strong> = human all-cause mortality data exists. <strong>Claims Longer, Unproven</strong> = lifespan claim rests on animals, mechanism or nothing.</p>
+  </div>
+  <div class="longer-note" id="longer-note"><strong>Read this column honestly.</strong> Only the prescription drugs here have randomized mortality data, and all of it comes from sick or high-risk populations. Exercise, sleep and sauna have never been randomized against death for twenty years — nobody can run that trial — so their evidence is observational. That is not a demotion; it is the best evidence that will ever exist for them. Nothing else on this site has shown it extends human life.</div>
   <div class="matrix" id="matrix"></div>
   <div class="filter-bar" role="search">
     <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="search-input" type="text" placeholder="Search interventions, aliases…" autocomplete="off"></div>
     <select id="cat-select" aria-label="Category"></select>
     <select id="eff-select" aria-label="Efficacy"></select>
     <select id="safe-select" aria-label="Safety"></select>
-    <select id="sort-select" aria-label="Sort"><option value="name" selected>Sort: A–Z</option><option value="verdict">Sort: verdict</option><option value="updated">Sort: recently updated</option></select>
+    <select id="sort-select" aria-label="Sort"><option value="name" selected>Sort: A–Z</option><option value="verdict">Sort: verdict</option><option value="updated">Sort: recently updated</option><option value="mortality">Sort: strength of lifespan evidence</option></select>
     <button class="reset-btn" id="reset-btn" type="button">Reset</button>
   </div>
   <p class="result-line" id="result-line"></p>
@@ -281,25 +300,32 @@ const VERDICTS = [
   ["Avoid","var(--v-avoid)","Unproven or disproven, and a documented or serious safety concern."],
 ];
 const VCOLOR = Object.fromEntries(VERDICTS.map(v=>[v[0],v[1]])); VCOLOR["Unassessed"]="var(--v-unassessed)";
-const state = { search:"", verdict:"all", cat:"all", eff:"all", safe:"all", sortBy:"name" };
+const state = { search:"", verdict:"all", cat:"all", eff:"all", safe:"all", sortBy:"name", scope:"all" };
+const SCOPE_LABEL = { healthspan:"Live Better", lifespan:"Live Longer", both:"Live Better + Longer", "n/a":"Diagnostic" };
+const MORT_LABEL = { human_rct:"Extends life: human RCT", human_obs:"Extends life: human observational", human_null:"Extends life: tested, no benefit", animal_only:"Extends life: animals only", none:"Extends life: no data", "n/a":"" };
+const MORT_CLASS = { human_rct:"scope-longer", human_obs:"scope-longer", human_null:"mort-null", animal_only:"mort-animal", none:"mort-none", "n/a":"" };
+function scopeBucket(r){ const s=r.lifespan_scope, m=r.mortality_evidence; const b=[]; if(s==="healthspan"||s==="both") b.push("better"); if((s==="lifespan"||s==="both")&&(m==="human_rct"||m==="human_obs")) b.push("longer"); if((s==="lifespan"||s==="both")&&(m==="animal_only"||m==="none"||m==="human_null")) b.push("claimed"); return b.join(" "); }
+function wireScope(){ document.querySelectorAll(".scope-toggle .cat-btn").forEach(b=>b.addEventListener("click",()=>{ state.scope=b.dataset.scope; document.querySelectorAll(".scope-toggle .cat-btn").forEach(x=>x.classList.toggle("is-active",x===b)); document.getElementById("longer-note").classList.toggle("is-visible",state.scope==="longer"); if(state.scope==="longer"){state.sortBy="mortality";document.getElementById("sort-select").value="mortality";renderLedger();} applyFilters(); })); }
 function renderMatrix() {
   document.getElementById("matrix").innerHTML = VERDICTS.map(([v,c,d]) => `<div class="mx ${state.verdict===v?"is-active":""}" data-v="${esc(v)}" style="--v-color:${c}"><h3><span class="dot"></span>${esc(v)}</h3><p>${d}</p><div class="n">${DATA.filter(r=>r.verdict===v).length} interventions</div></div>`).join("");
   document.querySelectorAll(".mx").forEach(m => m.addEventListener("click", () => { state.verdict = state.verdict===m.dataset.v ? "all" : m.dataset.v; renderMatrix(); applyFilters(); }));
 }
 function fillSelect(id,label,values,key){ const s=document.getElementById(id); s.innerHTML=`<option value="all">${label}</option>`+values.map(v=>`<option value="${esc(v)}"${v===state[key]?" selected":""}>${esc(v)}</option>`).join(""); }
 function renderSelects(){ fillSelect("cat-select","All categories",[...new Set(DATA.map(r=>r.category))].sort(),"cat"); fillSelect("eff-select","Any efficacy",[...new Set(DATA.map(r=>r.efficacy_tier))],"eff"); fillSelect("safe-select","Any safety",[...new Set(DATA.map(r=>r.safety_tier))],"safe"); }
-function wire(){ ["cat","eff","safe"].forEach(k=>document.getElementById(k+"-select").addEventListener("change",e=>{state[k]=e.target.value;applyFilters();})); document.getElementById("search-input").addEventListener("input",e=>{state.search=e.target.value.trim().toLowerCase();applyFilters();}); document.getElementById("sort-select").addEventListener("change",e=>{state.sortBy=e.target.value;renderLedger();applyFilters();}); document.getElementById("reset-btn").addEventListener("click",()=>{Object.assign(state,{search:"",verdict:"all",cat:"all",eff:"all",safe:"all",sortBy:"name"});document.getElementById("search-input").value="";document.getElementById("sort-select").value="name";renderAll();}); }
+function wire(){ ["cat","eff","safe"].forEach(k=>document.getElementById(k+"-select").addEventListener("change",e=>{state[k]=e.target.value;applyFilters();})); document.getElementById("search-input").addEventListener("input",e=>{state.search=e.target.value.trim().toLowerCase();applyFilters();}); document.getElementById("sort-select").addEventListener("change",e=>{state.sortBy=e.target.value;renderLedger();applyFilters();}); document.getElementById("reset-btn").addEventListener("click",()=>{Object.assign(state,{search:"",verdict:"all",cat:"all",eff:"all",safe:"all",sortBy:"name",scope:"all"});document.querySelectorAll(".scope-toggle .cat-btn").forEach(x=>x.classList.toggle("is-active",x.dataset.scope==="all"));document.getElementById("longer-note").classList.remove("is-visible");document.getElementById("search-input").value="";document.getElementById("sort-select").value="name";renderAll();}); }
 const VORDER = Object.fromEntries(VERDICTS.map((v,i)=>[v[0],i])); VORDER["Unassessed"]=9;
-function sorted(){ const a=[...DATA]; if(state.sortBy==="name") a.sort((x,y)=>x.name.localeCompare(y.name)); else if(state.sortBy==="verdict") a.sort((x,y)=>VORDER[x.verdict]-VORDER[y.verdict]||x.name.localeCompare(y.name)); else a.sort((x,y)=>(y.updated_at||"").localeCompare(x.updated_at||"")); return a; }
+function sorted(){ const a=[...DATA]; if(state.sortBy==="name") a.sort((x,y)=>x.name.localeCompare(y.name)); else if(state.sortBy==="verdict") a.sort((x,y)=>VORDER[x.verdict]-VORDER[y.verdict]||x.name.localeCompare(y.name)); else if(state.sortBy==="mortality"){ const MO={human_rct:0,human_obs:1,human_null:2,animal_only:3,none:4,"n/a":5}; a.sort((x,y)=>(MO[x.mortality_evidence]??5)-(MO[y.mortality_evidence]??5)||x.name.localeCompare(y.name)); } else a.sort((x,y)=>(y.updated_at||"").localeCompare(x.updated_at||"")); return a; }
 function fact(k,v){ return v?`<div><span class="k">${k}</span>${esc(v)}</div>`:""; }
 function renderLedger(){
   resetCites();
   const open=new Set([...document.querySelectorAll(".entry.is-open")].map(e=>e.dataset.id));
-  document.getElementById("ledger").innerHTML = sorted().map(r=>`<article class="entry" id="intervention-${r.id}" data-id="${r.id}" data-v="${esc(r.verdict)}" data-cat="${esc(r.category)}" data-eff="${esc(r.efficacy_tier)}" data-safe="${esc(r.safety_tier)}" data-search="${esc((r.name+" "+(r.aliases||[]).join(" ")+" "+(r.one_line_verdict||"")).toLowerCase())}">
+  document.getElementById("ledger").innerHTML = sorted().map(r=>`<article class="entry" id="intervention-${r.id}" data-id="${r.id}" data-v="${esc(r.verdict)}" data-cat="${esc(r.category)}" data-eff="${esc(r.efficacy_tier)}" data-safe="${esc(r.safety_tier)}" data-scope="${scopeBucket(r)}" data-search="${esc((r.name+" "+(r.aliases||[]).join(" ")+" "+(r.one_line_verdict||"")).toLowerCase())}">
     <button class="entry-head" type="button" aria-expanded="false">
       <div class="score-badge" style="background:${VCOLOR[r.verdict]};color:#fff;border-color:transparent" title="${esc(r.verdict)}">${{"Supported":"✓","Works But Weigh The Risk":"⚖","Low Downside, Unproven":"?","Avoid":"✕","Unassessed":"…"}[r.verdict]||"…"}</div>
       <div class="entry-main"><p class="entry-title">${esc(r.name)}</p><div class="badges">
         <span class="badge v-badge" style="background:${VCOLOR[r.verdict]}">${esc(r.verdict)}</span>
+        ${r.lifespan_scope&&r.lifespan_scope!=="n/a"?`<span class="badge ${r.lifespan_scope==="healthspan"?"scope-better":"scope-longer"}">${esc(SCOPE_LABEL[r.lifespan_scope]||r.lifespan_scope)}</span>`:""}
+        ${r.mortality_evidence&&r.mortality_evidence!=="n/a"?`<span class="badge ${MORT_CLASS[r.mortality_evidence]||""}">${esc(MORT_LABEL[r.mortality_evidence]||r.mortality_evidence)}</span>`:""}
         <span class="badge">${esc(r.category)}</span><span class="badge">Efficacy: ${esc(r.efficacy_tier)}</span><span class="badge">Safety: ${esc(r.safety_tier)}</span>
         ${r.last_reviewed?`<span class="badge mono">Reviewed ${fmtDate(r.last_reviewed)}</span>`:""}
       </div></div>
@@ -310,18 +336,20 @@ function renderLedger(){
       <div class="axes">
         <div class="axis"><span class="k">Does it work?</span><span class="v">${esc(r.efficacy_tier)}</span>${r.efficacy_summary?`<p>${esc(r.efficacy_summary)}</p>`:""}</div>
         <div class="axis"><span class="k">Does it hurt anything?</span><span class="v">${esc(r.safety_tier)}</span>${r.safety_summary?`<p>${esc(r.safety_summary)}</p>`:""}</div>
+        <div class="axis"><span class="k">Does it extend life?</span><span class="v">${esc((MORT_LABEL[r.mortality_evidence]||"Not assessed").replace(/^Extends life: /,""))}</span><p>Aimed at: ${esc(SCOPE_LABEL[r.lifespan_scope]||"not classified")}</p></div>
       </div>
+      ${r.scope_note?`<div class="scope-note"><span class="k">Why it's classified this way</span>${esc(r.scope_note)}</div>`:""}
       <div class="facts">${fact("Dose context (from studies)",r.dose_context)}${fact("Who should avoid it",r.populations_to_avoid)}${fact("Interactions",r.interactions)}${fact("Cost",r.cost_note)}${(r.aliases&&r.aliases.length)?fact("Also called",r.aliases.join(", ")):""}</div>
       ${Array.isArray(r.evidence_refs)&&r.evidence_refs.length?`<p class="rationale">Sources${cite(r.evidence_refs)}</p>`:`<p class="rationale" style="color:#b45309">No sources attached yet — the daily run will cite this entry.</p>`}
       <a class="entry-link" href="index.html?q=${encodeURIComponent(r.name)}">See research on ${esc(r.name)} ↗</a>
     </div></div></div></article>`).join("");
   document.querySelectorAll(".entry").forEach(e=>{ if(open.has(e.dataset.id)) e.classList.add("is-open"); e.querySelector(".entry-head").addEventListener("click",()=>{const o=e.classList.toggle("is-open");e.querySelector(".entry-head").setAttribute("aria-expanded",o);}); });
 }
-function applyFilters(){ let n=0; document.querySelectorAll(".entry").forEach(e=>{ const m=(state.verdict==="all"||e.dataset.v===state.verdict)&&(state.cat==="all"||e.dataset.cat===state.cat)&&(state.eff==="all"||e.dataset.eff===state.eff)&&(state.safe==="all"||e.dataset.safe===state.safe)&&(!state.search||e.dataset.search.includes(state.search)); e.hidden=!m; if(m)n++; }); document.getElementById("result-line").innerHTML=`Showing <strong>${n}</strong> of ${DATA.length} interventions`; document.getElementById("empty-state").hidden=n!==0; }
+function applyFilters(){ let n=0; document.querySelectorAll(".entry").forEach(e=>{ const m=(state.verdict==="all"||e.dataset.v===state.verdict)&&(state.cat==="all"||e.dataset.cat===state.cat)&&(state.eff==="all"||e.dataset.eff===state.eff)&&(state.safe==="all"||e.dataset.safe===state.safe)&&(state.scope==="all"||(e.dataset.scope||"").split(" ").includes(state.scope))&&(!state.search||e.dataset.search.includes(state.search)); e.hidden=!m; if(m)n++; }); document.getElementById("result-line").innerHTML=`Showing <strong>${n}</strong> of ${DATA.length} interventions`; document.getElementById("empty-state").hidden=n!==0; }
 function renderAll(){ renderMatrix(); renderSelects(); renderLedger(); applyFilters(); renderSources(); }
 async function fetchData(){ if(!Object.keys(REFS).length) await loadRefs(); const [{data,error},lastRun]=await Promise.all([supabaseClient.from("longevity_interventions").select("*").order("name"),fetchLastRun()]); if(error){renderConnState("error",`Couldn't reach Supabase (${error.message}).`);return;} DATA=data||[]; setLastUpdate(DATA.map(r=>r.updated_at).concat([lastRun])); renderConnState("ok"); renderAll();
   if(location.hash.startsWith("#intervention-")){ const e=document.getElementById(location.hash.slice(1)); if(e){e.classList.add("is-open");e.scrollIntoView({behavior:"smooth"});} } }
-function boot(){ renderConnState("loading","Connecting to Supabase…"); if(!initClient())return; wire(); fetchData(); setInterval(fetchData,POLL_MS); }
+function boot(){ renderConnState("loading","Connecting to Supabase…"); if(!initClient())return; wire(); wireScope(); fetchData(); setInterval(fetchData,POLL_MS); }
 boot();
 </script>
 </body>

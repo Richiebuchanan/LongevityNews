@@ -278,6 +278,7 @@ function renderLedger(){ const a=[...DATA]; if(state.sortBy==="name") a.sort((x,
   document.getElementById("ledger").innerHTML=a.map(r=>{ const fr=(r.field_refs&&typeof r.field_refs==="object")?r.field_refs:{}; return `<article class="fig" id="figure-${r.id}" data-camp="${esc(r.camp)}" data-search="${esc((r.name+" "+(r.tagline||"")+" "+(r.core_claims||"")+" "+(r.own_protocol||"")+" "+(r.what_they_are_doing||"")).toLowerCase())}">
     <div class="fig-head"><h2>${esc(r.name)}</h2><span class="camp" style="background:${CAMP_COLOR[r.camp]||"var(--muted)"}">${esc(r.camp)}</span></div>
     <p class="fig-tag">${esc(r.tagline||"")}</p>
+    ${r.lifespan_scope?`<p class="fig-tag"><strong>Which question they're answering:</strong> ${esc({healthspan:"Live Better",lifespan:"Live Longer",both:"Both"}[r.lifespan_scope]||r.lifespan_scope)}${r.scope_note?` — ${esc(r.scope_note)}`:""}</p>`:""}
     <div class="fig-grid">
       ${block("What they're doing now",r.what_they_are_doing,"wide",fr.what_they_are_doing)}
       ${block("What they claim",r.core_claims,"",fr.core_claims)}
