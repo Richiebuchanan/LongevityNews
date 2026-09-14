@@ -1,0 +1,20 @@
+name: Fetch longevity candidates
+on:
+  schedule:
+    - cron: "0 11 * * *"      # daily 11:00 UTC (6am Central); Claude task reviews every 3-4 days
+  workflow_dispatch: {}
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r fetcher/requirements.txt
+      - run: python fetcher/fetch_candidates.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+          LOOKBACK_DAYS: "5"
