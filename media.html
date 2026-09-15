@@ -144,6 +144,7 @@
       <a href="interventions.html">Interventions</a>
       <a href="media.html" class="is-current">Podcasts &amp; Video</a>
       <a href="figures.html">Envelope Pushers</a>
+      <a href="glossary.html">Glossary</a>
     </nav>
     <p class="page-tagline">Tracked longevity podcasts and channels, summarized with an evidence check on every episode.</p>
     <div class="masthead-divider"></div>
@@ -270,7 +271,7 @@ function renderLedger(){
       <button class="entry-head" type="button" aria-expanded="false">
         <div class="score-badge" title="Relevance">${score==null?"—":score}<span>REL</span></div>
         <div class="entry-main"><p class="entry-title">${r.episode_number?`#${r.episode_number} · `:""}${esc(r.title)}</p><div class="badges">
-          ${isNew?`<span class="badge new-badge">🆕 New</span>`:""}<span class="badge tag">${esc(r.show_name)}</span><span class="badge">${r.media_type}</span>
+          ${isNew?`<span class="badge new-badge">🆕 New</span>`:""}<span class="badge tag">${esc(r.show_name)}</span>${r.lifespan_scope&&r.lifespan_scope!=="n/a"?`<span class="badge tag">${{healthspan:"Live Better",lifespan:"Live Longer",both:"Better + Longer"}[r.lifespan_scope]||""}</span>`:""}<span class="badge">${r.media_type}</span>
           <span class="badge">${STATUS_LABEL[r.transcript_status]||r.transcript_status}</span>
           ${guests.map(g=>`<span class="badge">${esc(g)}</span>`).join("")}${iv.map(i=>`<span class="badge">${esc(i)}</span>`).join("")}
           <span class="badge mono">Published ${fmtDate(r.publish_date)}</span>
@@ -293,5 +294,6 @@ async function fetchData(){ const [{data,error},lastRun]=await Promise.all([supa
 function boot(){ renderConnState("loading","Connecting to Supabase…"); if(!initClient())return; wire(); fetchData(); setInterval(fetchData,POLL_MS); }
 boot();
 </script>
+<script src="glossary.js" defer></script>
 </body>
 </html>

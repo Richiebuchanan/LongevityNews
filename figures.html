@@ -158,6 +158,7 @@
       <a href="interventions.html">Interventions</a>
       <a href="media.html">Podcasts &amp; Video</a>
       <a href="figures.html" class="is-current">Envelope Pushers</a>
+      <a href="glossary.html">Glossary</a>
     </nav>
     <p class="page-tagline">Kurzweil, Johnson, Attia, Sinclair, de Grey and the others — what they're doing, what they claim, and where the evidence actually is.</p>
     <div class="masthead-divider"></div>
@@ -293,5 +294,6 @@ async function load(){ await loadRefs(); const [{data,error},run]=await Promise.
 function boot(){ renderConnState("loading","Connecting to Supabase…"); if(!initClient())return; document.getElementById("search-input").addEventListener("input",e=>{state.search=e.target.value.trim().toLowerCase();applyFilters();}); document.getElementById("sort-select").addEventListener("change",e=>{state.sortBy=e.target.value;renderLedger();applyFilters();}); load(); }
 boot();
 </script>
+<script src="glossary.js" defer></script>
 </body>
 </html>

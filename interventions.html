@@ -167,6 +167,7 @@
       <a href="interventions.html" class="is-current">Interventions</a>
       <a href="media.html">Podcasts &amp; Video</a>
       <a href="figures.html">Envelope Pushers</a>
+      <a href="glossary.html">Glossary</a>
     </nav>
     <p class="page-tagline">Does it work? Does it hurt anything? Every supplement, drug and habit graded on both.</p>
     <div class="masthead-divider"></div>
@@ -352,5 +353,6 @@ async function fetchData(){ if(!Object.keys(REFS).length) await loadRefs(); cons
 function boot(){ renderConnState("loading","Connecting to Supabase…"); if(!initClient())return; wire(); wireScope(); fetchData(); setInterval(fetchData,POLL_MS); }
 boot();
 </script>
+<script src="glossary.js" defer></script>
 </body>
 </html>

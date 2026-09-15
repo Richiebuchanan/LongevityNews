@@ -146,6 +146,9 @@
   .tier .rat { font-size:12.5px; color:var(--muted); margin:4px 0 10px; }
   .tier ul { margin:0; padding:0; list-style:none; } .tier li { font-size:13.5px; padding:6px 0; border-top:1px solid var(--border); line-height:1.55; max-width:78ch; }
   .tier li strong { color:var(--ink); }
+  .tier .scope-note { font-size:12px; color:var(--ink-secondary); background:var(--surface-2); border-radius:6px; padding:7px 10px; margin:0 0 10px; max-width:78ch; }
+  .sp { display:inline-block; font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; border-radius:20px; padding:1px 7px; margin-right:6px; vertical-align:middle; border:1px solid var(--border); }
+  .sp-better { background:var(--accent-wash); border-color:var(--accent-wash-2); color:var(--accent); } .sp-longer { background:var(--ok-wash); border-color:var(--ok-wash-2); color:var(--ok); } .sp-na { color:var(--muted); }
   .policy { background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:14px 16px; font-size:13.5px; color:var(--ink-secondary); line-height:1.6; max-width:78ch; }
   .changelog li { font-size:13px; padding:8px 0; border-top:1px solid var(--border); } .changelog .d { font-family:"IBM Plex Mono",monospace; color:var(--muted); font-size:11.5px; margin-right:8px; }
   .changelog .why { color:var(--muted); display:block; margin-top:2px; }
@@ -167,6 +170,7 @@
       <a href="interventions.html">Interventions</a>
       <a href="media.html">Podcasts &amp; Video</a>
       <a href="figures.html">Envelope Pushers</a>
+      <a href="glossary.html">Glossary</a>
     </nav>
     <p class="page-tagline">Where things stand today on living long and well — the baseline every new finding is measured against, and the instruction manual that follows from it.</p>
     <div class="masthead-divider"></div>
@@ -253,6 +257,7 @@ async function renderSources() {
     return `<li id="src-${n}">${body}</li>`;
   }).join("");
 }
+function scopePill(s){ if(!s) return ""; const m={healthspan:["Live Better","sp-better"],lifespan:["Live Longer","sp-longer"],both:["Better + Longer","sp-longer"],"n/a":["Diagnostic","sp-na"]}[s]; return m?`<span class="sp ${m[1]}">${m[0]}</span>`:""; }
 function renderCitedList(items, idx) { if (!Array.isArray(items)) return ""; return items.map(it => typeof it === "string" ? `<li>${esc(it)}</li>` : `<li>${it.label ? `<span class="analysis-item-label">${esc(it.label)}:</span> ` : ""}${esc(it.text)}${cite(normalizeRefs(it))}</li>`).join(""); }
 function renderCitedParagraph(items, idx) { if (!items) return ""; if (typeof items === "string") return esc(items); return items.map(it => typeof it === "string" ? esc(it) : `${esc(it.text)}${cite(normalizeRefs(it))}`).join(" "); }
 let analysisHistory = [], analysisIndex = 0;
@@ -290,7 +295,7 @@ function render(row){
   const d=row.document;
   document.getElementById("sos-version").textContent=`Version ${row.version} · published ${fmtDateTime(row.published_at)}${row.revision_reason?` · ${row.revision_reason}`:""}`;
   document.getElementById("framing").textContent=d.framing||"";
-  document.getElementById("manual-body").innerHTML=(d.instruction_manual||[]).map(t=>`<div class="tier" style="--t:${TIER_COLOR[t.tier]||"var(--muted)"}"><h3><span class="tl">Tier ${esc(t.tier)}</span>${esc(t.heading)}</h3><p class="rat">${esc(t.rationale||"")}</p><ul>${(t.items||[]).map(i=>`<li><strong>${esc(i.label)}.</strong> ${esc(i.text)}${refs(i.source_refs)}</li>`).join("")}</ul></div>`).join("");
+  document.getElementById("manual-body").innerHTML=(d.instruction_manual||[]).map(t=>`<div class="tier" style="--t:${TIER_COLOR[t.tier]||"var(--muted)"}"><h3><span class="tl">Tier ${esc(t.tier)}</span>${esc(t.heading)}</h3><p class="rat">${esc(t.rationale||"")}</p>${t.scope_note?`<p class="scope-note">${esc(t.scope_note)}</p>`:""}<ul>${(t.items||[]).map(i=>`<li>${scopePill(i.scope)}<strong>${esc(i.label)}.</strong> ${esc(i.text)}${refs(i.source_refs)}</li>`).join("")}</ul></div>`).join("");
   document.getElementById("sections-body").innerHTML=(d.sections||[]).map(s=>`<section class="sos-section" id="${esc(s.key)}"><h2>${esc(s.heading)}</h2><p class="sos-intro">${esc(s.intro||"")}</p>${(s.items||[]).map(i=>`<div class="claim"><div class="claim-head"><h3>${esc(i.label)}</h3><span class="conf" style="background:${CONF_COLOR(i.confidence)}">${esc(i.confidence||"")}</span></div><p>${esc(i.text)}${refs(i.source_refs)}</p></div>`).join("")}</section>`).join("");
   document.getElementById("policy-body").textContent=d.revision_policy||"";
   const all=VERSIONS.flatMap(v=>(v.changelog||[]).map(c=>({...c,version:v.version}))).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||b.version-a.version);
@@ -302,5 +307,6 @@ async function load(){ await loadRefs(); const {data,error}=await supabaseClient
 function boot(){ renderConnState("loading","Connecting to Supabase…"); if(!initClient())return; document.getElementById("v-prev").addEventListener("click",()=>{if(vi<VERSIONS.length-1){vi++;render(VERSIONS[vi]);}}); document.getElementById("v-next").addEventListener("click",()=>{if(vi>0){vi--;render(VERSIONS[vi]);}}); load(); }
 boot();
 </script>
+<script src="glossary.js" defer></script>
 </body>
 </html>

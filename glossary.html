@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Glossary — Longevity News</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --ground:#f3f4f3; --plane:#e9ebea; --surface:#ffffff; --surface-2:#f6f8f7;
+    --ink:#1a1a1a; --ink-secondary:#4d4d4d; --muted:#8a8a8a;
+    --border:rgba(26,26,26,0.12); --border-strong:rgba(26,26,26,0.22);
+    --accent:#0f7b6c; --accent-ink:#ffffff; --accent-wash:rgba(15,123,108,0.08); --accent-wash-2:rgba(15,123,108,0.20); --link:#0b6357;
+    --tier-1:#1f8a4c; --tier-2:#2a78d6; --tier-3:#eda100; --tier-4:#eb6834; --tier-5:#8a8a8a;
+    --v-supported:#1f8a4c; --v-risk:#eda100; --v-lowdown:#2a78d6; --v-avoid:#c8102e; --v-unassessed:#8a8a8a;
+    --ok:#1f8a4c; --ok-wash:rgba(31,138,76,0.10); --ok-wash-2:rgba(31,138,76,0.25);
+    --shadow-1:0 1px 2px rgba(26,26,26,0.06); --shadow-2:0 8px 24px rgba(26,26,26,0.10);
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    color-scheme:dark; --ground:#121413; --plane:#181a19; --surface:#1e201f; --surface-2:#262928;
+    --ink:#f2f2f2; --ink-secondary:#c7c7c7; --muted:#8f8f8f; --border:rgba(242,242,242,0.12); --border-strong:rgba(242,242,242,0.22);
+    --accent:#2fc4ad; --accent-ink:#04211c; --accent-wash:rgba(47,196,173,0.14); --accent-wash-2:rgba(47,196,173,0.26); --link:#5fd9c6;
+    --tier-1:#33b06a; --tier-2:#3987e5; --tier-3:#c98500; --tier-4:#d95926; --tier-5:#8f8f8f;
+    --v-supported:#33b06a; --v-risk:#f0b429; --v-lowdown:#3987e5; --v-avoid:#ff4d68; --v-unassessed:#8f8f8f;
+    --ok:#33b06a; --ok-wash:rgba(51,176,106,0.14); --ok-wash-2:rgba(51,176,106,0.3);
+    --shadow-1:0 1px 2px rgba(0,0,0,0.30); --shadow-2:0 12px 32px rgba(0,0,0,0.45);
+  } }
+  * { box-sizing:border-box; } html { -webkit-text-size-adjust:100%; } html,body { overflow-x:hidden; width:100%; max-width:100vw; }
+  body { margin:0; background:var(--ground); color:var(--ink); font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; line-height:1.5; }
+  img,svg { max-width:100%; }
+  @media (prefers-reduced-motion:no-preference) { .entry-body { transition:grid-template-rows 180ms ease; } .chevron { transition:transform 150ms ease; } }
+  h1,h2,h3 { font-weight:700; text-wrap:balance; margin:0; } a { color:var(--link); }
+  .mono { font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+  .app { max-width:1040px; margin:0 auto; padding:28px 20px 80px; width:100%; }
+  .masthead { padding:8px 4px 0; margin-bottom:16px; }
+  .masthead h1 { font-size:clamp(28px,4vw,38px); letter-spacing:-0.005em; }
+  .mast-sub { margin:10px 0 0; max-width:62ch; color:var(--ink-secondary); font-size:15px; }
+  .mast-meta { margin-top:14px; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px; color:var(--muted); }
+  .masthead-divider { border-top:1px solid var(--border); margin:16px 0; }
+  .site-nav { display:flex; gap:14px; margin-top:12px; font-size:13px; font-weight:600; flex-wrap:wrap; }
+  .site-nav a { text-decoration:none; color:var(--ink-secondary); padding:4px 0; border-bottom:2px solid transparent; }
+  .site-nav a:hover { color:var(--ink); } .site-nav a.is-current { color:var(--accent); border-bottom-color:var(--accent); }
+  .page-tagline { margin:8px 0 0; font-size:12.5px; color:var(--muted); max-width:62ch; }
+  .masthead-title-row { display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .overview-link { color:var(--link); font-weight:700; font-size:13px; text-decoration:none; white-space:nowrap; }
+  .disclaimer-banner { display:flex; gap:10px; align-items:flex-start; background:var(--accent-wash); border:1px solid var(--accent-wash-2); color:var(--ink); border-radius:8px; padding:12px 14px; margin:0; font-size:13px; line-height:1.5; overflow-wrap:break-word; }
+  .disclaimer-banner .icon { flex:none; } .disclaimer-banner strong { font-weight:700; color:var(--accent); }
+  .conn-banner { margin:8px 0 0; padding:10px 14px; border-radius:8px; background:var(--accent-wash); border:1px solid var(--accent-wash-2); color:var(--ink); font-size:13.5px; }
+  .filter-section-head { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 10px; margin:0 2px 10px; }
+  .filter-section-head h2 { font-size:14px; letter-spacing:0.01em; } .filter-hint { font-size:12px; color:var(--muted); margin:0; }
+  .priority-note { font-size:11.5px; color:var(--muted); margin:0 2px 10px; max-width:72ch; }
+  .filter-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:18px; box-shadow:var(--shadow-1); position:sticky; top:12px; z-index:5; }
+  .search-wrap { position:relative; flex:1 1 200px; min-width:160px; }
+  .search-wrap svg { position:absolute; left:9px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--muted); pointer-events:none; }
+  .search-wrap input { width:100%; font:inherit; font-size:13.5px; padding:7px 10px 7px 28px; border-radius:6px; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--ink); }
+  .search-wrap input:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  .cat-toggle { display:inline-flex; gap:4px; padding:3px; background:var(--surface-2); border:1px solid var(--border); border-radius:7px; flex-wrap:wrap; }
+
+  .cat-btn { font:inherit; font-size:12.5px; font-weight:600; padding:5px 10px; border-radius:5px; border:1px solid transparent; background:transparent; color:var(--ink-secondary); cursor:pointer; }
+  .cat-btn.is-active { background:var(--surface); color:var(--ink); border-color:var(--border); box-shadow:var(--shadow-1); }
+  .start-here { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin:0 0 18px; box-shadow:var(--shadow-1); }
+  .start-here h2 { font-size:14px; margin-bottom:8px; } .start-here p { margin:0 0 10px; font-size:13px; color:var(--ink-secondary); }
+  .start-here .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { font-size:12.5px; font-weight:600; padding:4px 10px; border-radius:20px; border:1px solid var(--accent-wash-2); background:var(--accent-wash); color:var(--accent); text-decoration:none; }
+  .letters { display:flex; flex-wrap:wrap; gap:2px; margin:0 0 14px; font-family:"IBM Plex Mono",monospace; font-size:12px; }
+  .letters a { padding:3px 6px; border-radius:4px; text-decoration:none; color:var(--ink-secondary); } .letters a:hover { background:var(--surface-2); color:var(--ink); } .letters a.is-empty { color:var(--muted); opacity:.5; pointer-events:none; }
+  .letter-head { font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--muted); margin:22px 2px 8px; padding-top:8px; border-top:1px solid var(--border); scroll-margin-top:90px; }
+  .term { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin:0 0 10px; box-shadow:var(--shadow-1); scroll-margin-top:90px; }
+  .term.is-target { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-wash-2); }
+  .term-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .term-head h3 { font-size:16px; } .term-head h3 a { color:inherit; text-decoration:none; } .term-head h3 a:hover { color:var(--accent); }
+  .term-cat { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600; }
+  .term-aliases { font-size:12px; color:var(--muted); margin:2px 0 8px; }
+  .term-short { font-weight:500; margin:0 0 8px; }
+  .term-long { font-size:14px; color:var(--ink-secondary); margin:0 0 8px; line-height:1.55; }
+  .term-range { font-size:13px; color:var(--ink-secondary); border-left:2px solid var(--ok); padding:6px 10px; background:var(--surface-2); border-radius:0 6px 6px 0; margin:0 0 8px; }
+  .term-range .k, .term-where .k { display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-bottom:2px; }
+  .term-foot { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--muted); align-items:baseline; }
+  .term-foot a { font-weight:600; text-decoration:none; }
+  .term-where { font-size:12px; color:var(--muted); }
+  .empty { text-align:center; color:var(--muted); padding:30px; }
+  .count { font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted); margin-left:auto; }
+  @media (max-width:640px) { .filter-bar { position:static; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="masthead">
+    <div class="masthead-title-row">
+      <h1>Longevity News</h1>
+      <a class="overview-link" href="overview.html">About this site</a>
+    </div>
+    <p class="mast-sub">Human longevity research, media and interventions — aggregated, summarized and graded on evidence. Refreshed daily.</p>
+    <div class="mast-meta" id="mast-meta">Glossary</div>
+    <nav class="site-nav">
+      <a href="baseline.html">State of the Science</a>
+      <a href="index.html">Research Watch</a>
+      <a href="interventions.html">Interventions</a>
+      <a href="media.html">Podcasts &amp; Video</a>
+      <a href="figures.html">Envelope Pushers</a>
+      <a href="glossary.html" class="is-current">Glossary</a>
+    </nav>
+    <p class="page-tagline">Every technical term on this site, in plain language first and the technical version second. Terms are underlined across the site — hover for the short version, click to land here.</p>
+    <div class="masthead-divider"></div>
+    <p class="conn-banner" id="conn-state" hidden></p>
+  </header>
+  <main>
+    <section class="start-here" id="start-here">
+      <h2>Start here</h2>
+      <p>The handful of terms you need to read anything on this site.</p>
+      <div class="chips" id="start-chips"></div>
+    </section>
+    <div class="filter-bar">
+      <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search terms, aliases, definitions…" aria-label="Search glossary"></div>
+      <div class="cat-toggle" id="cats"><button class="cat-btn is-active" data-cat="all" type="button">All</button></div>
+      <div class="cat-toggle" id="level"><button class="cat-btn is-active" data-level="plain" type="button">Plain</button><button class="cat-btn" data-level="technical" type="button">Technical</button></div>
+      <span class="count" id="count"></span>
+    </div>
+    <nav class="letters" id="letters" aria-label="Jump to letter"></nav>
+    <div id="list"></div>
+  </main>
+</div>
+<script>
+const SUPABASE_URL = "https://acxdvzcohjayvmqdaoke.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_2n567u9zKgZ-L-M_yGRf5Q_HEV_p1-f";
+let sb, TERMS = [], BY = {}, WHERE = {};
+const state = { q:"", cat:"all", level:"plain" };
+const CATS = ["site","study design","statistic","biomarker","mechanism","drug class","condition","hype"];
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[ch])); }
+function conn(status, msg) { const el = document.getElementById("conn-state"); if (status === "ok") { el.hidden = true; return; } el.hidden = false; el.textContent = msg; }
+function reEsc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+function linkRelated(text) {
+  // turn [[slug]]-style or plain related mentions into nothing; we only link the related list explicitly
+  return esc(text);
+}
+function renderList() {
+  const q = state.q.trim().toLowerCase();
+  const rows = TERMS.filter(t => (state.cat === "all" || t.category === state.cat) &&
+    (!q || [t.term, ...(t.aliases||[]), t.short_def, t.long_plain, t.long_technical||""].join(" ").toLowerCase().includes(q)));
+  document.getElementById("count").textContent = rows.length + " of " + TERMS.length;
+  const list = document.getElementById("list");
+  if (!rows.length) { list.innerHTML = '<p class="empty">No terms match.</p>'; return; }
+  let out = "", letter = "";
+  rows.forEach(t => {
+    const L = t.term.replace(/^["“]/, "")[0].toUpperCase();
+    if (L !== letter) { letter = L; out += `<div class="letter-head" id="letter-${L}">${L}</div>`; }
+    const long = state.level === "technical" && t.long_technical ? t.long_technical : t.long_plain;
+    const rel = (t.related||[]).filter(s => BY[s]).map(s => `<a href="#${s}" data-jump="${s}">${esc(BY[s].term)}</a>`).join("");
+    const w = WHERE[t.slug];
+    out += `<article class="term" id="${t.slug}">
+      <div class="term-head"><h3><a href="#${t.slug}">${esc(t.term)}</a></h3><span class="term-cat">${esc(t.category)}${t.start_here ? " · start here" : ""}</span></div>
+      ${(t.aliases||[]).length ? `<p class="term-aliases">Also: ${t.aliases.map(esc).join(", ")}</p>` : ""}
+      <p class="term-short">${esc(t.short_def)}</p>
+      <p class="term-long">${esc(long)}</p>
+      ${t.reference_range ? `<div class="term-range"><span class="k">What good looks like</span>${esc(t.reference_range)}</div>` : ""}
+      <div class="term-foot">
+        ${rel ? `<span>Related: ${rel}</span>` : ""}
+        ${w ? `<span class="term-where">${w}</span>` : ""}
+      </div>
+    </article>`;
+  });
+  list.innerHTML = out;
+  const present = new Set(rows.map(t => t.term.replace(/^["“]/, "")[0].toUpperCase()));
+  document.getElementById("letters").innerHTML = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(L => `<a href="#letter-${L}" class="${present.has(L) ? "" : "is-empty"}">${L}</a>`).join("");
+  highlightHash();
+}
+function highlightHash() {
+  document.querySelectorAll(".term.is-target").forEach(e => e.classList.remove("is-target"));
+  const slug = decodeURIComponent(location.hash.slice(1)); if (!slug) return;
+  const el = document.getElementById(slug); if (!el) return;
+  el.classList.add("is-target"); el.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+async function whereUsed() {
+  // Count where each term appears across the site's own content (client-side, cheap columns only)
+  try {
+    const [i, a, f] = await Promise.all([
+      sb.from("longevity_interventions").select("name,one_line_verdict,efficacy_summary,safety_summary,scope_note"),
+      sb.from("longevity_articles").select("article_title,summary"),
+      sb.from("longevity_figures").select("name,core_claims,evidence_check")
+    ]);
+    const docs = { interventions: (i.data||[]).map(r => Object.values(r).join(" ")), articles: (a.data||[]).map(r => Object.values(r).join(" ")), figures: (f.data||[]).map(r => Object.values(r).join(" ")) };
+    TERMS.forEach(t => {
+      const re = new RegExp("(^|[^A-Za-z0-9+])(" + [t.term, ...(t.aliases||[])].filter(x => x && x.length > 1).map(reEsc).join("|") + ")(?![A-Za-z0-9])", "i");
+      const c = {}; for (const k in docs) c[k] = docs[k].filter(d => re.test(d)).length;
+      const parts = []; if (c.interventions) parts.push(`${c.interventions} intervention${c.interventions>1?"s":""}`); if (c.articles) parts.push(`${c.articles} article${c.articles>1?"s":""}`); if (c.figures) parts.push(`${c.figures} profile${c.figures>1?"s":""}`);
+      if (parts.length) WHERE[t.slug] = "Appears in " + parts.join(", ");
+    });
+    renderList();
+  } catch (e) { /* counts are decoration */ }
+}
+async function load() {
+  conn("loading", "Connecting to Supabase…");
+  if (!window.supabase?.createClient) { conn("error", "Couldn't load the Supabase client library."); return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data, error } = await sb.from("longevity_glossary").select("*").eq("status","published").order("term");
+  if (error || !data) { conn("error", "Couldn't load the glossary."); return; }
+  TERMS = data.sort((x,y) => x.term.replace(/^["“]/,"").localeCompare(y.term.replace(/^["“]/,""), undefined, {sensitivity:"base"}));
+  TERMS.forEach(t => BY[t.slug] = t);
+  conn("ok");
+  document.getElementById("start-chips").innerHTML = TERMS.filter(t => t.start_here).map(t => `<a class="chip" href="#${t.slug}">${esc(t.term)}</a>`).join("");
+  const cats = document.getElementById("cats");
+  CATS.filter(c => TERMS.some(t => t.category === c)).forEach(c => { const b = document.createElement("button"); b.className = "cat-btn"; b.type = "button"; b.dataset.cat = c; b.textContent = c; cats.appendChild(b); });
+  cats.addEventListener("click", e => { const b = e.target.closest(".cat-btn"); if (!b) return; state.cat = b.dataset.cat; cats.querySelectorAll(".cat-btn").forEach(x => x.classList.toggle("is-active", x === b)); renderList(); });
+  document.getElementById("level").addEventListener("click", e => { const b = e.target.closest(".cat-btn"); if (!b) return; state.level = b.dataset.level; document.querySelectorAll("#level .cat-btn").forEach(x => x.classList.toggle("is-active", x === b)); renderList(); });
+  document.getElementById("q").addEventListener("input", e => { state.q = e.target.value; renderList(); });
+  window.addEventListener("hashchange", () => { if (state.q || state.cat !== "all") { state.q = ""; state.cat = "all"; document.getElementById("q").value = ""; cats.querySelectorAll(".cat-btn").forEach(x => x.classList.toggle("is-active", x.dataset.cat === "all")); } renderList(); });
+  renderList();
+  whereUsed();
+}
+load();
+</script>
+</body>
+</html>

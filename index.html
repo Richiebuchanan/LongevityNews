@@ -144,6 +144,7 @@
       <a href="interventions.html">Interventions</a>
       <a href="media.html">Podcasts &amp; Video</a>
       <a href="figures.html">Envelope Pushers</a>
+      <a href="glossary.html">Glossary</a>
     </nav>
     <p class="page-tagline">Papers, preprints, trial results and reporting on human longevity — graded on evidence and relevance.</p>
     <div class="masthead-divider"></div>
@@ -361,5 +362,6 @@ async function fetchArticles() {
 async function boot() { renderConnState("loading","Connecting to Supabase…"); if (!initClient()) return; await loadRefs(); const q=new URLSearchParams(location.search).get("q"); if (q) { state.search=q.toLowerCase(); document.getElementById("search-input").value=q; } wireControls(); initAnalysis(); fetchArticles(); setInterval(fetchArticles, POLL_MS); document.addEventListener("visibilitychange", () => { if (document.visibilityState==="visible") fetchArticles(); }); }
 boot();
 </script>
+<script src="glossary.js" defer></script>
 </body>
 </html>
