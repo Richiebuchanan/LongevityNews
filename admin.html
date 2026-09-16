@@ -134,6 +134,11 @@
   .card h2 { font-size:15px; display:flex; align-items:center; gap:8px; margin-bottom:4px; } .card h2 .dot { width:9px; height:9px; border-radius:50%; }
   .hint { font-size:12px; color:var(--muted); margin:0 0 12px; }
   label { display:block; font-size:12px; font-weight:600; margin:10px 0 4px; }
+  .card-wide { grid-column:1 / -1; }
+  .tx-row { display:flex; justify-content:space-between; align-items:center; margin:8px 0 4px; font-size:12.5px; color:var(--ink-secondary); }
+  .tx-row label.inline { display:flex; align-items:center; gap:6px; margin:0; font-weight:500; }
+  .tx-count { font-family:"IBM Plex Mono",monospace; color:var(--muted); }
+  input[type=file] { font:inherit; font-size:12.5px; color:var(--ink-secondary); }
   input[type=text], input[type=url], input[type=password], textarea, select { width:100%; font:inherit; font-size:13.5px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--ink); }
   textarea { min-height:64px; resize:vertical; } .field-hint { font-size:11px; color:var(--muted); margin:4px 0 0; }
   .field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -147,7 +152,7 @@
 </head>
 <body>
 <div class="app" id="app-shell">
-  <nav class="site-nav"><a href="baseline.html">State of the Science</a><a href="index.html">Research Watch</a><a href="interventions.html">Interventions</a><a href="media.html">Podcasts &amp; Video</a><a href="figures.html">Envelope Pushers</a><a href="admin.html" class="is-current">Admin</a></nav>
+  <nav class="site-nav"><a href="baseline.html">State of the Science</a><a href="index.html">Research Watch</a><a href="interventions.html">Interventions</a><a href="media.html">Podcasts &amp; Video</a><a href="figures.html">Envelope Pushers</a><a href="glp1.html">GLP-1s</a><a href="glossary.html">Glossary</a><a href="admin.html" class="is-current">Admin</a></nav>
   <h1>Longevity News Admin</h1>
   <p class="sub">Queue a paper or article, add an intervention for the daily run to research, add a researcher or source to watch, or hand it a YouTube link for an episode it couldn't find.</p>
   <div id="app-locked" class="lock-screen">
@@ -201,6 +206,18 @@
       <label for="episode-url">YouTube link</label><input type="url" id="episode-url" placeholder="https://www.youtube.com/watch?v=…">
       <div class="card-foot"><button class="primary" id="submit-episode" type="button">Add link</button><div class="msg" id="episode-msg"></div></div>
     </div>
+    <div class="card card-wide">
+      <h2><span class="dot" style="background:var(--ok)"></span>Upload an episode transcript</h2>
+      <p class="hint">Paste the transcript text or choose a .txt / .srt / .vtt file. Timestamps and caption numbering are stripped automatically. Saves straight to the episode and flags it for re-summary on the next run.</p>
+      <label for="tx-episode">Episode</label><select id="tx-episode"><option value="">Loading…</option></select>
+      <label for="tx-file">Transcript file (optional)</label><input type="file" id="tx-file" accept=".txt,.srt,.vtt,.md,text/plain">
+      <label for="tx-text">Transcript text</label><textarea id="tx-text" rows="10" placeholder="Paste the transcript here, or choose a file above…"></textarea>
+      <div class="tx-row">
+        <label class="inline"><input type="checkbox" id="tx-replace"> Replace existing transcript</label>
+        <span class="tx-count" id="tx-count">0 words</span>
+      </div>
+      <div class="card-foot"><button class="primary" id="submit-tx" type="button">Save transcript</button><div class="msg" id="tx-msg"></div></div>
+    </div>
     <div class="card">
       <h2><span class="dot" style="background:#7c3aed"></span>Add an envelope pusher</h2>
       <p class="hint">A person or organization to profile. Goes in as a stub; the next run researches and fills the profile.</p>
@@ -235,7 +252,7 @@ async function loadEpisodes() {
 document.getElementById("unlock-btn").addEventListener("click", async () => {
   const attempt = document.getElementById("password-input").value; const msg = document.getElementById("unlock-msg");
   const res = await fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: attempt, action: "__verify__" }) });
-  if (res.ok) { PASSWORD = attempt; document.getElementById("app-locked").style.display = "none"; document.getElementById("app-unlocked").style.display = "block"; document.getElementById("app-shell").classList.add("is-unlocked"); loadEpisodes(); }
+  if (res.ok) { PASSWORD = attempt; document.getElementById("app-locked").style.display = "none"; document.getElementById("app-unlocked").style.display = "block"; document.getElementById("app-shell").classList.add("is-unlocked"); loadEpisodes(); loadTxEpisodes(); }
   else showMsg(msg, "Wrong password.", false);
 });
 document.getElementById("password-input").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("unlock-btn").click(); });
@@ -245,6 +262,39 @@ document.getElementById("submit-interv").addEventListener("click", async e => { 
 document.getElementById("submit-res").addEventListener("click", async e => { if (await submit("add_researcher", { name: v("res-name"), affiliation: v("res-aff"), focus: v("res-focus") }, document.getElementById("res-msg"), e.target)) { ["res-name","res-aff","res-focus"].forEach(i => document.getElementById(i).value = ""); } });
 document.getElementById("submit-src").addEventListener("click", async e => { if (await submit("add_source", { source_name: v("src-name"), url: v("src-url"), source_kind: v("src-kind"), access_method: v("src-access"), quality_tier: v("src-tier"), notes: v("src-notes") }, document.getElementById("src-msg"), e.target)) { ["src-name","src-url","src-notes"].forEach(i => document.getElementById(i).value = ""); } });
 document.getElementById("submit-fig").addEventListener("click", async e => { if (await submit("add_figure", { name: v("fig-name"), camp: v("fig-camp"), tagline: v("fig-note") }, document.getElementById("fig-msg"), e.target)) { document.getElementById("fig-name").value = ""; document.getElementById("fig-note").value = ""; } });
+// ---- transcript upload
+function cleanTranscript(raw) {
+  let t = raw.replace(/\r\n?/g, "\n");
+  if (/^WEBVTT/m.test(t) || /-->/.test(t)) {
+    t = t.split("\n").filter(l => !/^WEBVTT/.test(l) && !/^\d+$/.test(l.trim()) && !/-->/.test(l) && !/^(Kind|Language):/.test(l) && !/^NOTE/.test(l)).join("\n");
+    t = t.replace(/<[^>]+>/g, "");
+    const out = []; for (const line of t.split("\n")) { const s = line.trim(); if (s && s !== out[out.length - 1]) out.push(s); }   // captions repeat lines
+    t = out.join(" ");
+  }
+  return t.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+function updateCount() { const n = document.getElementById("tx-text").value.trim().split(/\s+/).filter(Boolean).length; document.getElementById("tx-count").textContent = n.toLocaleString() + " words"; }
+async function loadTxEpisodes() {
+  const sel = document.getElementById("tx-episode");
+  try { const c = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data } = await c.from("longevity_media").select("show_name, episode_number, title, transcript_status").not("episode_number", "is", null).order("publish_date", { ascending: false }).limit(300);
+    if (!data || !data.length) { sel.innerHTML = `<option value="">No episodes tracked yet</option>`; return; }
+    sel.innerHTML = `<option value="">Choose…</option>` + data.map(e => `<option value="${e.show_name.replace(/"/g,"&quot;")}||${e.episode_number}">${e.transcript_status === "complete" ? "✓ " : ""}${e.show_name} — #${e.episode_number} ${e.title.replace(/</g,"&lt;")}</option>`).join("");
+  } catch { sel.innerHTML = `<option value="">Couldn't load episodes</option>`; }
+}
+document.getElementById("tx-file").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const txt = await f.text(); document.getElementById("tx-text").value = cleanTranscript(txt); updateCount();
+});
+document.getElementById("tx-text").addEventListener("input", updateCount);
+document.getElementById("submit-tx").addEventListener("click", async e => {
+  const [show_name, episode_number] = v("tx-episode").split("||");
+  const transcript = cleanTranscript(document.getElementById("tx-text").value);
+  if (!show_name) { showMsg(document.getElementById("tx-msg"), "Pick an episode first.", false); return; }
+  if (await submit("add_transcript", { show_name, episode_number, transcript, transcript_source: "manual_upload", replace: document.getElementById("tx-replace").checked }, document.getElementById("tx-msg"), e.target)) {
+    document.getElementById("tx-text").value = ""; document.getElementById("tx-file").value = ""; document.getElementById("tx-replace").checked = false; updateCount(); loadTxEpisodes(); loadEpisodes();
+  }
+});
 document.getElementById("submit-episode").addEventListener("click", async e => { const [show_name, episode_number] = v("episode-select").split("||"); if (await submit("add_episode_link", { show_name, episode_number, youtube_url: v("episode-url") }, document.getElementById("episode-msg"), e.target)) { document.getElementById("episode-url").value = ""; loadEpisodes(); } });
 </script>
 </body>

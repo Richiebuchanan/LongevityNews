@@ -46,3 +46,12 @@ On the next revision that meets the existing policy, restructure the four-tier i
 ## Existing rows
 
 All 39 interventions were classified on 2026-09-09 by review. Do not reclassify an existing row unless a new tier-1 or tier-2 source changes the mortality picture; when you do, cite it and update `scope_note`.
+
+## Topic pages (added 2026-09-16)
+`longevity_topic_pages` holds versioned, append-only documents for topic pages (first: `glp1`). Structure: `framing`, `grade_key`, `sections[]` each with `items[]` (label, text, grade ∈ proven/likely/unproven/null, refs[]) or `dos[]`/`donts[]` (text, derived_from), and `revision_policy`. Pages also show live content by `topic_tags` on articles, interventions, media and trial watch.
+
+Each run:
+1. Tag every new article, media row or trial update that concerns a topic with its tag (`glp1`, `brain`, `cancer` when it exists). Tagging is what makes it appear on the topic page.
+2. Revise a topic document only under its `revision_policy` — a hard-endpoint human RCT promotes an item to proven; a completed trial that misses moves it to null; new observational/animal data may add an item as unproven or likely, never promote. Publish as a new version (max(version)+1) with the full document, a changelog entry (date, change, reason, refs) and `revision_reason`. Never edit a published version.
+3. Do's and don'ts derive from risk items; change them only when the risk item they cite changes, and keep `derived_from` accurate.
+4. A trial on the watchlist with `changed_since_review = true` and a topic tag is the first thing to check for that topic.
