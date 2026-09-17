@@ -183,6 +183,7 @@
   <div class="filter-bar" role="search">
     <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="search-input" type="text" placeholder="Search title, summary, intervention…" autocomplete="off"></div>
     <div class="cat-toggle" id="cat-toggle" role="group" aria-label="Filter by evidence tier"></div>
+    <select id="feed-select" aria-label="Feed"><option value="all">News + landmarks</option><option value="news">Recent research</option><option value="landmark">Landmark studies</option></select>
     <select id="scope-select" aria-label="Live better or longer"><option value="all">Better + Longer</option><option value="healthspan">Live Better</option><option value="lifespan">Live Longer</option><option value="both">Both</option></select>
     <select id="study-select" aria-label="Study type"></select>
     <select id="source-select" aria-label="Source"></select>
@@ -293,7 +294,7 @@ let DATA = [];
 const TIERS = [1,2,3,4,5];
 const TIER_LABEL = {1:"T1 Human RCT/Meta", 2:"T2 Human Observ.", 3:"T3 Animal", 4:"T4 Mechanistic", 5:"T5 Opinion/Claim"};
 const TIER_SHORT = {1:"RCT", 2:"Obs", 3:"Animal", 4:"Mech", 5:"Claim"};
-const state = { search:"", tier:"all", study:"all", source:"all", interv:"all", minScore:1, sortBy:"added_desc", scope:"all" };
+const state = { search:"", tier:"all", study:"all", source:"all", interv:"all", minScore:1, sortBy:"added_desc", scope:"all", feed:"all" };
 const SCOPE_LABEL = { healthspan:"Live Better", lifespan:"Live Longer", both:"Live Better + Longer" };
 function renderTierToggle() {
   const el = document.getElementById("cat-toggle");
@@ -310,6 +311,7 @@ function renderSelects() {
 function wireControls() {
   document.getElementById("study-select").addEventListener("change", e => { state.study = e.target.value; applyFilters(); });
   document.getElementById("scope-select").addEventListener("change", e => { state.scope = e.target.value; applyFilters(); });
+  document.getElementById("feed-select").addEventListener("change", e => { state.feed = e.target.value; if (state.feed === "landmark") { state.sortBy = "evidence"; const ss = document.getElementById("sort-select"); if (ss) ss.value = "evidence"; } applyFilters(); });
   document.getElementById("source-select").addEventListener("change", e => { state.source = e.target.value; applyFilters(); });
   document.getElementById("interv-select").addEventListener("change", e => { state.interv = e.target.value; applyFilters(); });
   document.getElementById("min-score").addEventListener("input", e => { state.minScore = +e.target.value; document.getElementById("min-score-out").textContent = e.target.value; applyFilters(); });
@@ -322,11 +324,12 @@ function renderLedger() {
   const openIds = new Set([...document.querySelectorAll(".entry.is-open")].map(e=>e.dataset.id)); const today = todayISO();
   document.getElementById("ledger").innerHTML = sortedData().map(r => {
     const interv = r.related_interventions||[]; const isNew = r.date_found===today;
-    return `<article class="entry" id="article-${r.id}" data-id="${r.id}" data-tier="${r.evidence_tier}" data-study="${esc(r.study_type)}" data-scope="${esc(r.lifespan_scope||"")}" data-source="${esc(r.source_site)}" data-score="${r.relevance_score}" data-interv="${esc(interv.join("||"))}" data-search="${esc((r.article_title+" "+(r.summary||"")+" "+interv.join(" ")).toLowerCase())}">
+    return `<article class="entry" id="article-${r.id}" data-id="${r.id}" data-tier="${r.evidence_tier}" data-study="${esc(r.study_type)}" data-scope="${esc(r.lifespan_scope||"")}" data-landmark="${r.landmark ? "1" : "0"}" data-source="${esc(r.source_site)}" data-score="${r.relevance_score}" data-interv="${esc(interv.join("||"))}" data-search="${esc((r.article_title+" "+(r.summary||"")+" "+interv.join(" ")).toLowerCase())}">
       <button class="entry-head" type="button" aria-expanded="false">
         <div class="score-badge" title="Relevance ${r.relevance_score}/10">${r.relevance_score}<span>REL</span></div>
         <div class="entry-main"><p class="entry-title">${esc(r.article_title)}</p><div class="badges">
           ${isNew?`<span class="badge new-badge">🆕 New</span>`:""}
+          ${r.landmark?`<span class="badge tag" style="background:var(--ok-wash);border-color:var(--ok-wash-2);color:var(--ok);font-weight:600">★ Landmark</span>`:""}
           ${r.lifespan_scope&&SCOPE_LABEL[r.lifespan_scope]?`<span class="badge tag">${SCOPE_LABEL[r.lifespan_scope]}</span>`:""}
           <span class="badge"><span class="dot" style="background:var(--tier-${r.evidence_tier})"></span>Tier ${r.evidence_tier} · ${TIER_SHORT[r.evidence_tier]}</span>
           <span class="badge">${esc(r.content_type)}</span><span class="badge">${esc(r.study_type)}</span>
@@ -348,7 +351,7 @@ function jumpToArticle(id, evt) { if (evt) evt.preventDefault(); let e=document.
 window.jumpToArticle = jumpToArticle;
 function applyFilters() {
   let n=0; document.querySelectorAll(".entry").forEach(e => { const iv=e.dataset.interv.split("||").filter(Boolean);
-    const m = (state.tier==="all"||e.dataset.tier===state.tier) && (state.study==="all"||e.dataset.study===state.study) && (state.scope==="all"||e.dataset.scope===state.scope||(state.scope!=="both"&&e.dataset.scope==="both")) && (state.source==="all"||e.dataset.source===state.source) && (state.interv==="all"||iv.includes(state.interv)) && (+e.dataset.score>=state.minScore) && (!state.search||e.dataset.search.includes(state.search));
+    const m = (state.tier==="all"||e.dataset.tier===state.tier) && (state.study==="all"||e.dataset.study===state.study) && (state.scope==="all"||e.dataset.scope===state.scope||(state.scope!=="both"&&e.dataset.scope==="both")) && (state.feed==="all"||(state.feed==="landmark"&&e.dataset.landmark==="1")||(state.feed==="news"&&e.dataset.landmark!=="1")) && (state.source==="all"||e.dataset.source===state.source) && (state.interv==="all"||iv.includes(state.interv)) && (+e.dataset.score>=state.minScore) && (!state.search||e.dataset.search.includes(state.search));
     e.hidden=!m; if (m) n++; });
   document.getElementById("result-line").innerHTML = `Showing <strong>${n}</strong> of ${DATA.length} entries`; document.getElementById("empty-state").hidden = n!==0;
 }
