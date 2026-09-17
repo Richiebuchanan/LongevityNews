@@ -206,6 +206,16 @@
       <label for="episode-url">YouTube link</label><input type="url" id="episode-url" placeholder="https://www.youtube.com/watch?v=…">
       <div class="card-foot"><button class="primary" id="submit-episode" type="button">Add link</button><div class="msg" id="episode-msg"></div></div>
     </div>
+    <div class="card">
+      <h2><span class="dot" style="background:#06b6d4"></span>Add a social account to watch</h2>
+      <p class="hint">Bluesky handles or newsletter RSS feeds. The fetcher pulls links from these accounts and the task grades what it finds in the Pulse.</p>
+      <label for="sa-handle">Handle / slug</label><input type="text" id="sa-handle" placeholder="e.g. mkaeberlein.bsky.social or my-newsletter">
+      <label for="sa-platform">Platform</label><select id="sa-platform"><option value="bluesky">Bluesky</option><option value="newsletter">Newsletter / RSS</option><option value="substack">Substack</option></select>
+      <label for="sa-name">Display name</label><input type="text" id="sa-name" placeholder="Matt Kaeberlein">
+      <label for="sa-role">Role</label><select id="sa-role"><option value="signal">Signal</option><option value="practice">Practice</option><option value="hype_watch">Hype watch</option><option value="institutional">Institutional</option></select>
+      <label for="sa-feed">Feed URL (newsletters only)</label><input type="url" id="sa-feed" placeholder="https://example.com/feed/">
+      <div class="card-foot"><button class="primary" id="submit-sa" type="button">Add account</button><div class="msg" id="sa-msg"></div></div>
+    </div>
     <div class="card card-wide">
       <h2><span class="dot" style="background:var(--ok)"></span>Upload an episode transcript</h2>
       <p class="hint">Paste the transcript text or choose a .txt / .srt / .vtt file. Timestamps and caption numbering are stripped automatically. Saves straight to the episode and flags it for re-summary on the next run.</p>
@@ -262,6 +272,13 @@ document.getElementById("submit-interv").addEventListener("click", async e => { 
 document.getElementById("submit-res").addEventListener("click", async e => { if (await submit("add_researcher", { name: v("res-name"), affiliation: v("res-aff"), focus: v("res-focus") }, document.getElementById("res-msg"), e.target)) { ["res-name","res-aff","res-focus"].forEach(i => document.getElementById(i).value = ""); } });
 document.getElementById("submit-src").addEventListener("click", async e => { if (await submit("add_source", { source_name: v("src-name"), url: v("src-url"), source_kind: v("src-kind"), access_method: v("src-access"), quality_tier: v("src-tier"), notes: v("src-notes") }, document.getElementById("src-msg"), e.target)) { ["src-name","src-url","src-notes"].forEach(i => document.getElementById(i).value = ""); } });
 document.getElementById("submit-fig").addEventListener("click", async e => { if (await submit("add_figure", { name: v("fig-name"), camp: v("fig-camp"), tagline: v("fig-note") }, document.getElementById("fig-msg"), e.target)) { document.getElementById("fig-name").value = ""; document.getElementById("fig-note").value = ""; } });
+// ---- social account
+document.getElementById("submit-sa").addEventListener("click", async e => {
+  const handle = v("sa-handle"), platform = v("sa-platform"), display_name = v("sa-name"),
+        role = v("sa-role"), feed_url = v("sa-feed");
+  if (!handle) { showMsg(document.getElementById("sa-msg"), "Handle is required.", false); return; }
+  await submit("add_social_account", { handle, platform, display_name, role, feed_url: feed_url || null }, document.getElementById("sa-msg"), e.target);
+});
 // ---- transcript upload
 function cleanTranscript(raw) {
   let t = raw.replace(/\r\n?/g, "\n");

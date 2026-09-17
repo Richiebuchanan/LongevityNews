@@ -1,7 +1,7 @@
 name: Fetch longevity candidates
 on:
   schedule:
-    - cron: "0 11 * * *"      # daily 11:00 UTC (6am Central); Claude task reviews every 3-4 days
+    - cron: "0 11 * * *"      # daily 11:00 UTC
   workflow_dispatch: {}
 jobs:
   fetch:
@@ -11,10 +11,18 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -r fetcher/requirements.txt
-      - run: python fetcher/fetch_candidates.py
+      - name: Fetch PubMed, preprints, RSS, trials
+        run: python fetcher/fetch_candidates.py
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+          LOOKBACK_DAYS: "5"
+      - name: Fetch Bluesky and newsletters
+        run: python fetcher/fetch_social.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
           LOOKBACK_DAYS: "5"
