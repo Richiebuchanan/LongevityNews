@@ -88,3 +88,41 @@ Each run, after filing media episodes:
 4. When the Pulse's `studies_surfaced` section includes a study a voice discussed, note in the Pulse whether the voice's framing matched the site's grade or diverged, and in which direction.
 5. New voices: when a media entry names a host or guest not in the table and the host has a recurring show with >50k subscribers/followers, draft a row with `signal_quality` based on the episodes reviewed so far; note it in the run log for Richie to approve. Never publish a draft voice entry without approval.
 6. Platform links (`youtube_url`, `spotify_url`, `apple_url`, `x_url`, `instagram_url`, `bluesky_url`, `website_url`, `newsletter_url`, `tiktok_url`): fill any that are null when you encounter the voice's content on that platform. These are factual and do not need approval.
+
+## Quarterly and Annual Evidence Reviews (added 2026-09-17)
+
+`longevity_reviews` holds two living documents — a quarterly and an annual — that are **updated every run** when something warrants it, not frozen until the period ends.
+
+### Update rules (every run):
+
+**Check whether this run produced any of these triggers:**
+- A verdict changed on an intervention
+- A new intervention was added
+- A trial on the watchlist reported results or changed status
+- State of the Science published a new version
+- A topic page published a new version
+- A landmark study was filed
+- A new Envelope Pusher or Voice was added
+
+**If any trigger fired → update the current quarterly:**
+1. Read the current quarterly (`review_type='quarterly'`, latest `period_label`).
+2. Edit the relevant section of the `document` JSON in place (add to `verdict_changes`, append to `interventions_added`, update `trials_reported`, etc.).
+3. Rewrite `summary` to reflect the quarter so far, not just this run.
+4. Update `the_one_thing` only if this run's trigger is more consequential than the current one.
+5. Update `watch_next` if a watched item reported or a new one appeared.
+6. Set `last_updated` to now; increment `version` only if the change is structural (new section, rewritten summary), not for an append.
+
+**If the quarterly changed → check whether the annual needs it too:**
+- A verdict change, a State of the Science revision, or a topic page v2+ always propagates to the annual.
+- A new intervention or landmark does not, unless it is consequential enough to change `what_changed_for_a_reader`.
+- Rewrite `summary` and `where_things_stand` only when the picture genuinely shifted, not on every append.
+
+### Period transitions:
+- **New quarter:** On the first run after the quarter boundary (Jan 1, Apr 1, Jul 1, Oct 1), create a new quarterly row with a fresh `period_label` (e.g. 'Q4 2026'), `period_start/end`, and an initial `document` seeded from the just-ended quarter's `watch_next`. The old quarterly stays as an archive.
+- **New year:** On the first run after Jan 1, archive the current annual (set `published=false` or keep for history) and create a fresh one seeded from the last quarterly's summary and the prior annual's `what_to_watch`.
+
+### If no trigger fired:
+Do nothing to the reviews. A run that only filed articles and wrote a Pulse does not touch them. "Nothing changed" is a valid state.
+
+### The old `longevity_synthesis` table:
+Deprecated. Do not write to it. The Pulse replaces its weekly function; the quarterly replaces its synthesis function.

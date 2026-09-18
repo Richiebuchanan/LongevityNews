@@ -111,12 +111,20 @@
       <a href="voices.html">Voices</a>
       <a href="glossary.html">Glossary</a>
     </nav>
-    <p class="page-tagline">What the longevity field talked about this week — graded against the evidence, sourced from Bluesky and the newsletters worth reading.</p>
+    <p class="page-tagline">What the longevity field talked about this week, plus the quarterly and annual evidence reviews — graded against the evidence, sourced from Bluesky and the newsletters worth reading.</p>
     <div class="masthead-divider"></div>
     <p class="conn-banner" id="conn-state" hidden></p>
   </header>
   <main>
     <div id="pulse-content"></div>
+    <section class="review-section" id="quarterly-section">
+      <h2 class="review-head">📊 Quarterly Evidence Review</h2>
+      <div id="quarterly"></div>
+    </section>
+    <section class="review-section" id="annual-section">
+      <h2 class="review-head">📅 Annual State of the Field</h2>
+      <div id="annual"></div>
+    </section>
     <details style="margin:22px 0 0;">
       <summary style="font-size:14px;font-weight:600;cursor:pointer;color:var(--ink-secondary);">Accounts we watch</summary>
       <div class="accounts" id="accounts"></div>
@@ -187,6 +195,53 @@ function renderPulse(p) {
   return html;
 }
 
+function renderReview(r, containerId) {
+  const d = r.document;
+  const el = document.getElementById(containerId);
+  let html = `<div class="review-card">
+    <div class="rc-title">${esc(d.title || r.period_label)}</div>
+    <div class="rc-meta">Version ${r.version} · updated ${new Date(r.last_updated).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})} · ${esc(r.period_label)}</div>
+    <div class="rc-summary">${esc(d.summary)}</div>`;
+
+  if (d.the_one_thing) html += `<div class="rc-highlight">${esc(d.the_one_thing)}</div>`;
+  if (d.what_changed_for_a_reader) html += `<div class="rc-highlight">${esc(d.what_changed_for_a_reader)}</div>`;
+  if (d.where_things_stand) html += `<div class="rc-section"><h3>Where things stand</h3><p style="font-size:13.5px;color:var(--ink-secondary);line-height:1.55;max-width:80ch;">${esc(d.where_things_stand)}</p></div>`;
+
+  if (d.verdict_changes && d.verdict_changes.length) {
+    html += `<div class="rc-section"><h3>Verdict changes</h3><ul>${d.verdict_changes.map(v => `<li><strong>${esc(v.name)}</strong>: ${esc(v.from)} → ${esc(v.to)} — ${esc(v.why)}</li>`).join("")}</ul></div>`;
+  } else if (d.verdict_changes) {
+    html += `<div class="rc-section"><h3>Verdict changes</h3><p style="font-size:13px;color:var(--muted);">None this period.</p></div>`;
+  }
+
+  if (d.interventions_added && d.interventions_added.length) {
+    html += `<div class="rc-section"><h3>Interventions added</h3><ul>${d.interventions_added.map(i => `<li><strong>${esc(i.name)}</strong> — ${esc(i.verdict)}. ${esc(i.why)}</li>`).join("")}</ul></div>`;
+  }
+
+  if (d.trials_reported && d.trials_reported.length) {
+    html += `<div class="rc-section"><h3>Trials reported</h3><ul>${d.trials_reported.map(t => `<li><strong>${esc(t.label)}</strong>: ${esc(t.result)}</li>`).join("")}</ul></div>`;
+  }
+
+  if (d.state_of_science) html += `<div class="rc-section"><h3>State of the Science</h3><p style="font-size:13.5px;color:var(--ink-secondary);line-height:1.5;">${esc(d.state_of_science)}</p></div>`;
+
+  if (d.topic_pages && d.topic_pages.length) {
+    html += `<div class="rc-section"><h3>Topic pages</h3><ul>${d.topic_pages.map(t => `<li><a href="topic.html?slug=${esc(t.slug)}" style="color:var(--link);font-weight:600;text-decoration:none;">${esc(t.slug)}</a> — v${t.versions}. ${esc(t.latest_change)}</li>`).join("")}</ul></div>`;
+  }
+
+  if (d.biggest_additions && d.biggest_additions.length) {
+    html += `<div class="rc-section"><h3>Biggest additions</h3><ul>${d.biggest_additions.map(a => `<li>${esc(a)}</li>`).join("")}</ul></div>`;
+  }
+
+  if (d.landmarks_filed) html += `<div class="rc-section"><h3>Landmark studies</h3><p style="font-size:13.5px;color:var(--ink-secondary);">${d.landmarks_filed} landmark studies filed as full Research Watch entries.</p></div>`;
+
+  const watchItems = d.watch_next || d.what_to_watch_in_2027 || [];
+  if (watchItems.length) {
+    html += `<div class="rc-section"><h3>Watch next</h3><ul>${watchItems.map(w => `<li>${esc(w)}</li>`).join("")}</ul></div>`;
+  }
+
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
 async function load() {
   conn("loading", "Connecting to Supabase…");
   if (!window.supabase?.createClient) { conn("error", "Couldn't load the Supabase client library."); return; }
@@ -204,6 +259,20 @@ async function load() {
     content.innerHTML = `<div class="pulse-empty"><strong>No pulse yet</strong>The first Pulse will appear after the fetcher has run and the task has reviewed the social feed. Once running, a new Pulse lands every 3–4 days.<br><br>In the meantime, 23 Bluesky accounts and newsletters are seeded and ready to watch — see "Accounts we watch" below.</div>`;
   } else {
     content.innerHTML = renderPulse(pulses[0]);
+  }
+
+  // Reviews
+  const { data: reviews } = await sb.from("longevity_reviews").select("*").eq("published", true).order("period_start", { ascending: false });
+  if (reviews && reviews.length) {
+    const latest = {};
+    reviews.forEach(r => {
+      const k = r.review_type + r.period_label;
+      if (!latest[k] || r.version > latest[k].version) latest[k] = r;
+    });
+    const q = Object.values(latest).find(r => r.review_type === "quarterly");
+    const a = Object.values(latest).find(r => r.review_type === "annual");
+    if (q) renderReview(q, "quarterly"); else document.getElementById("quarterly").innerHTML = '<p class="empty">No quarterly review yet.</p>';
+    if (a) renderReview(a, "annual"); else document.getElementById("annual").innerHTML = '<p class="empty">No annual review yet.</p>';
   }
 
   // Accounts
