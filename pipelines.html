@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Evidence Pipelines — Longevity News</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --ground:#f3f4f3; --plane:#e9ebea; --surface:#ffffff; --surface-2:#f6f8f7;
+    --ink:#1a1a1a; --ink-secondary:#4d4d4d; --muted:#8a8a8a;
+    --border:rgba(26,26,26,0.12); --border-strong:rgba(26,26,26,0.22);
+    --accent:#0f7b6c; --accent-ink:#ffffff; --accent-wash:rgba(15,123,108,0.08); --accent-wash-2:rgba(15,123,108,0.20); --link:#0b6357;
+    --tier-1:#1f8a4c; --tier-2:#2a78d6; --tier-3:#eda100; --tier-4:#eb6834; --tier-5:#8a8a8a;
+    --v-supported:#1f8a4c; --v-risk:#eda100; --v-lowdown:#2a78d6; --v-avoid:#c8102e; --v-unassessed:#8a8a8a;
+    --ok:#1f8a4c; --ok-wash:rgba(31,138,76,0.10); --ok-wash-2:rgba(31,138,76,0.25);
+    --shadow-1:0 1px 2px rgba(26,26,26,0.06); --shadow-2:0 8px 24px rgba(26,26,26,0.10);
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    color-scheme:dark; --ground:#121413; --plane:#181a19; --surface:#1e201f; --surface-2:#262928;
+    --ink:#f2f2f2; --ink-secondary:#c7c7c7; --muted:#8f8f8f; --border:rgba(242,242,242,0.12); --border-strong:rgba(242,242,242,0.22);
+    --accent:#2fc4ad; --accent-ink:#04211c; --accent-wash:rgba(47,196,173,0.14); --accent-wash-2:rgba(47,196,173,0.26); --link:#5fd9c6;
+    --tier-1:#33b06a; --tier-2:#3987e5; --tier-3:#c98500; --tier-4:#d95926; --tier-5:#8f8f8f;
+    --v-supported:#33b06a; --v-risk:#f0b429; --v-lowdown:#3987e5; --v-avoid:#ff4d68; --v-unassessed:#8f8f8f;
+    --ok:#33b06a; --ok-wash:rgba(51,176,106,0.14); --ok-wash-2:rgba(51,176,106,0.3);
+    --shadow-1:0 1px 2px rgba(0,0,0,0.30); --shadow-2:0 12px 32px rgba(0,0,0,0.45);
+  } }
+  * { box-sizing:border-box; } html { -webkit-text-size-adjust:100%; } html,body { overflow-x:hidden; width:100%; max-width:100vw; }
+  body { margin:0; background:var(--ground); color:var(--ink); font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; line-height:1.5; }
+  img,svg { max-width:100%; }
+  @media (prefers-reduced-motion:no-preference) { .entry-body { transition:grid-template-rows 180ms ease; } .chevron { transition:transform 150ms ease; } }
+  h1,h2,h3 { font-weight:700; text-wrap:balance; margin:0; } a { color:var(--link); }
+  .mono { font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+  .app { max-width:1040px; margin:0 auto; padding:28px 20px 80px; width:100%; }
+  .masthead { padding:8px 4px 0; margin-bottom:16px; }
+  .masthead h1 { font-size:clamp(28px,4vw,38px); letter-spacing:-0.005em; }
+  .mast-sub { margin:10px 0 0; max-width:62ch; color:var(--ink-secondary); font-size:15px; }
+  .mast-meta { margin-top:14px; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px; color:var(--muted); }
+  .masthead-divider { border-top:1px solid var(--border); margin:16px 0; }
+  .site-nav { display:flex; gap:14px; margin-top:12px; font-size:13px; font-weight:600; flex-wrap:wrap; }
+  .site-nav a { text-decoration:none; color:var(--ink-secondary); padding:4px 0; border-bottom:2px solid transparent; }
+  .site-nav a:hover { color:var(--ink); } .site-nav a.is-current { color:var(--accent); border-bottom-color:var(--accent); }
+  .page-tagline { margin:8px 0 0; font-size:12.5px; color:var(--muted); max-width:62ch; }
+  .masthead-title-row { display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .overview-link { color:var(--link); font-weight:700; font-size:13px; text-decoration:none; white-space:nowrap; }
+  .disclaimer-banner { display:flex; gap:10px; align-items:flex-start; background:var(--accent-wash); border:1px solid var(--accent-wash-2); color:var(--ink); border-radius:8px; padding:12px 14px; margin:0; font-size:13px; line-height:1.5; overflow-wrap:break-word; }
+  .disclaimer-banner .icon { flex:none; } .disclaimer-banner strong { font-weight:700; color:var(--accent); }
+  .conn-banner { margin:8px 0 0; padding:10px 14px; border-radius:8px; background:var(--accent-wash); border:1px solid var(--accent-wash-2); color:var(--ink); font-size:13.5px; }
+  .filter-section-head { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 10px; margin:0 2px 10px; }
+  .filter-section-head h2 { font-size:14px; letter-spacing:0.01em; } .filter-hint { font-size:12px; color:var(--muted); margin:0; }
+  .priority-note { font-size:11.5px; color:var(--muted); margin:0 2px 10px; max-width:72ch; }
+  .filter-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:18px; box-shadow:var(--shadow-1); position:sticky; top:12px; z-index:5; }
+  .search-wrap { position:relative; flex:1 1 200px; min-width:160px; }
+  .search-wrap svg { position:absolute; left:9px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--muted); pointer-events:none; }
+  .search-wrap input { width:100%; font:inherit; font-size:13.5px; padding:7px 10px 7px 28px; border-radius:6px; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--ink); }
+  .search-wrap input:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  .cat-toggle { display:inline-flex; gap:4px; padding:3px; background:var(--surface-2); border:1px solid var(--border); border-radius:7px; flex-wrap:wrap; }
+
+  .lede { font-size:14px; color:var(--ink-secondary); margin:0 0 16px; max-width:80ch; line-height:1.6; }
+  .stage-key { display:flex; flex-wrap:wrap; gap:4px 10px; font-size:11.5px; color:var(--muted); margin:0 0 16px; }
+  .stage-key .sk { display:inline-flex; align-items:center; gap:5px; }
+  .sk-dot { width:10px; height:10px; border-radius:50%; border:2px solid var(--border); }
+  .sk-dot.filled { border-color:var(--ok); background:var(--ok); }
+  .sk-dot.current { border-color:var(--accent); background:var(--accent); }
+  .sk-dot.future { border-color:var(--border); background:transparent; }
+  .pipe { background:var(--surface); border:1px solid var(--border); border-radius:10px; margin:0 0 14px; box-shadow:var(--shadow-1); overflow:hidden; }
+  .pipe-head { display:flex; align-items:center; gap:12px; padding:14px 18px; cursor:pointer; }
+  .pipe-head:hover { background:var(--surface-2); }
+  .pipe .pname { font-size:15px; font-weight:700; flex:1; }
+  .pipe .pstage { font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--accent); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  .pipe .chev { font-size:18px; color:var(--muted); transition:transform .2s; }
+  .pipe.is-open .chev { transform:rotate(90deg); }
+  .pipe-body { display:none; padding:0 18px 16px; border-top:1px solid var(--border); }
+  .pipe.is-open .pipe-body { display:block; }
+  .pipe .poneline { font-size:13.5px; color:var(--ink-secondary); margin:10px 0 12px; line-height:1.55; max-width:80ch; }
+  .progress { display:flex; align-items:center; gap:0; margin:0 0 14px; position:relative; }
+  .pstep { display:flex; flex-direction:column; align-items:center; flex:1; position:relative; z-index:1; }
+  .pstep .dot { width:14px; height:14px; border-radius:50%; border:2.5px solid var(--border); background:var(--surface); transition:all .2s; }
+  .pstep.done .dot { border-color:var(--ok); background:var(--ok); }
+  .pstep.active .dot { border-color:var(--accent); background:var(--accent); box-shadow:0 0 0 4px var(--accent-wash); }
+  .pstep .slabel { font-size:9px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); margin-top:4px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70px; }
+  .pstep.done .slabel { color:var(--ok); } .pstep.active .slabel { color:var(--accent); font-weight:700; }
+  .progress-line { position:absolute; top:7px; left:7%; right:7%; height:3px; background:var(--border); z-index:0; }
+  .progress-fill { height:100%; background:var(--ok); border-radius:2px; transition:width .3s; }
+  .milestone { padding:10px 0; border-top:1px solid var(--border); display:grid; grid-template-columns:80px 1fr; gap:4px 12px; font-size:13px; }
+  .milestone:first-of-type { border-top:0; }
+  .milestone .mdate { font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--muted); padding-top:1px; }
+  .milestone .mlabel { font-weight:600; color:var(--ink); }
+  .milestone .mresult { grid-column:2; color:var(--ink-secondary); line-height:1.5; }
+  .milestone .mstage { display:inline-block; font-size:9.5px; text-transform:uppercase; letter-spacing:.03em; padding:1px 6px; border-radius:10px; margin-left:6px; }
+  .mstage-done { background:var(--ok-wash); color:var(--ok); } .mstage-current { background:var(--accent-wash); color:var(--accent); }
+  .next-box { background:var(--accent-wash); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:10px 14px; margin:12px 0 0; font-size:13px; }
+  .next-box strong { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); margin-bottom:4px; }
+  .next-box .ndate { font-family:"IBM Plex Mono",monospace; color:var(--muted); font-size:12px; }
+  .next-box .nnote { color:var(--ink-secondary); margin-top:4px; line-height:1.5; }
+  .filter-row { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px; }
+  .filter-row .cat-btn { font:inherit; font-size:12.5px; font-weight:600; padding:5px 10px; border-radius:5px; border:1px solid transparent; background:transparent; color:var(--ink-secondary); cursor:pointer; }
+  .filter-row .cat-btn.is-active { background:var(--surface); color:var(--ink); border-color:var(--border); box-shadow:var(--shadow-1); }
+  .pcount { font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted); margin-left:auto; align-self:center; }
+  @media (max-width:640px) { .pstep .slabel { font-size:7.5px; max-width:42px; } .milestone { grid-template-columns:60px 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="masthead">
+    <div class="masthead-title-row"><h1>Longevity News</h1><a class="overview-link" href="overview.html">About this site</a></div>
+    <p class="mast-sub">Human longevity research, media and interventions — aggregated, summarized and graded on evidence. Refreshed daily.</p>
+    <div class="mast-meta">Evidence Pipelines</div>
+    <nav class="site-nav">
+      <a href="baseline.html">State of the Science</a>
+      <a href="index.html">Research Watch</a>
+      <a href="interventions.html">Interventions</a>
+      <a href="media.html">Podcasts &amp; Video</a>
+      <a href="figures.html">Envelope Pushers</a>
+      <a href="topics.html">Topics</a>
+      <a href="pulse.html">Pulse</a>
+      <a href="voices.html">Voices</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+    <p class="page-tagline">The evidence chain for each intervention worth tracking — from discovery through animal studies, human trials and outcome data, with what comes next and when.</p>
+    <div class="masthead-divider"></div>
+    <p class="conn-banner" id="conn-state" hidden></p>
+  </header>
+  <main>
+    <p class="lede">Most longevity headlines are one point on a longer story. This page shows the full chain: what has been shown, in what species, at what scale, and what trial comes next. An intervention moves right only when the evidence moves it — the same revision policy as the rest of the site.</p>
+    <div class="stage-key">
+      <span class="sk"><span class="sk-dot filled"></span> Completed</span>
+      <span class="sk"><span class="sk-dot current"></span> Current stage</span>
+      <span class="sk"><span class="sk-dot future"></span> Not yet reached</span>
+    </div>
+    <div class="filter-row" id="filters">
+      <button class="cat-btn is-active" data-f="all" type="button">All</button>
+      <span class="pcount" id="count"></span>
+    </div>
+    <div id="list"></div>
+  </main>
+</div>
+<script>
+const SUPABASE_URL = "https://acxdvzcohjayvmqdaoke.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_2n567u9zKgZ-L-M_yGRf5Q_HEV_p1-f";
+let sb, ALL = [];
+const STAGES = ["discovery","animal_proof","animal_replication","first_in_human","human_biomarker","human_outcome","proven"];
+const STAGE_LABEL = {discovery:"Discovery",animal_proof:"Animal proof",animal_replication:"Replicated",first_in_human:"First in human",human_biomarker:"Human biomarker",human_outcome:"Human outcome",proven:"Proven"};
+const STAGE_SHORT = {discovery:"Disc.",animal_proof:"Animal",animal_replication:"Replic.",first_in_human:"1st human",human_biomarker:"Biomarker",human_outcome:"Outcome",proven:"Proven"};
+const state = { filter: "all" };
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch])); }
+function conn(status, msg) { const el = document.getElementById("conn-state"); if (status === "ok") { el.hidden = true; return; } el.hidden = false; el.textContent = msg; }
+
+function stageIdx(s) { return STAGES.indexOf(s); }
+
+function progressBar(current) {
+  const ci = stageIdx(current);
+  const fillPct = Math.round(((ci + 0.5) / STAGES.length) * 100);
+  return `<div class="progress"><div class="progress-line"><div class="progress-fill" style="width:${fillPct}%"></div></div>${STAGES.map((s,i) => {
+    const cls = i < ci ? "done" : i === ci ? "active" : "";
+    return `<div class="pstep ${cls}"><div class="dot"></div><div class="slabel">${STAGE_SHORT[s]}</div></div>`;
+  }).join("")}</div>`;
+}
+
+function renderList() {
+  const filtered = state.filter === "all" ? ALL : ALL.filter(p => p.topic_tags.includes(state.filter));
+  document.getElementById("count").textContent = filtered.length + " pipelines";
+  document.getElementById("list").innerHTML = filtered.map(p => {
+    const ci = stageIdx(p.current_stage);
+    const ms = (p.milestones || []).map(m => {
+      const mi = stageIdx(m.stage);
+      const cls = mi < ci ? "mstage-done" : mi === ci ? "mstage-current" : "";
+      return `<div class="milestone"><span class="mdate">${esc(m.date)}</span><div><span class="mlabel">${esc(m.label)}</span><span class="mstage ${cls}">${esc(STAGE_LABEL[m.stage]||m.stage)}</span></div><div class="mresult">${esc(m.result)}</div></div>`;
+    }).join("");
+    const nx = p.next_expected;
+    const nxHtml = nx ? `<div class="next-box"><strong>Next milestone</strong><div>${esc(nx.label)}</div>${nx.nct_id ? `<span class="ndate"><a href="https://clinicaltrials.gov/study/${esc(nx.nct_id)}" target="_blank" rel="noopener">${esc(nx.nct_id)}</a></span> · ` : ""}<span class="ndate">${esc(nx.expected_date || "Unknown")}</span><div class="nnote">${esc(nx.note || "")}</div></div>` : "";
+    return `<div class="pipe" id="${esc(p.slug)}">
+      <div class="pipe-head" role="button" tabindex="0" aria-expanded="false">
+        <span class="pname">${esc(p.intervention)}</span>
+        <span class="pstage">${esc(STAGE_LABEL[p.current_stage])}</span>
+        <span class="chev">›</span>
+      </div>
+      <div class="pipe-body">
+        <div class="poneline">${esc(p.one_line)}</div>
+        ${progressBar(p.current_stage)}
+        ${ms}
+        ${nxHtml}
+      </div>
+    </div>`;
+  }).join("");
+
+  document.querySelectorAll(".pipe-head").forEach(h => {
+    h.addEventListener("click", () => {
+      const card = h.closest(".pipe");
+      card.classList.toggle("is-open");
+      h.setAttribute("aria-expanded", card.classList.contains("is-open"));
+    });
+    h.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); h.click(); }});
+  });
+  if (location.hash) {
+    const el = document.getElementById(location.hash.slice(1));
+    if (el) { el.classList.add("is-open"); el.querySelector(".pipe-head")?.setAttribute("aria-expanded","true"); el.scrollIntoView({block:"start",behavior:"smooth"}); }
+  }
+}
+
+async function load() {
+  conn("loading","Connecting…");
+  if (!window.supabase?.createClient) { conn("error","Couldn't load Supabase."); return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data, error } = await sb.from("longevity_pipelines").select("*").eq("active",true).order("current_stage",{ascending:false}).order("intervention");
+  if (error || !data) { conn("error","Couldn't load pipelines."); return; }
+  // Sort by stage progress (furthest right first)
+  ALL = data.sort((a,b) => stageIdx(b.current_stage) - stageIdx(a.current_stage) || a.intervention.localeCompare(b.intervention));
+  conn("ok");
+
+  // Build topic filters
+  const tags = new Set(); ALL.forEach(p => (p.topic_tags||[]).forEach(t => tags.add(t)));
+  const fb = document.getElementById("filters");
+  [...tags].sort().forEach(t => { const b = document.createElement("button"); b.className="cat-btn"; b.type="button"; b.dataset.f=t; b.textContent=t; fb.insertBefore(b, document.getElementById("count")); });
+  fb.addEventListener("click", e => { const b = e.target.closest(".cat-btn"); if (!b) return; state.filter = b.dataset.f; fb.querySelectorAll(".cat-btn").forEach(x => x.classList.toggle("is-active", x===b)); renderList(); });
+  renderList();
+}
+load();
+</script>
+<script src="glossary.js" defer></script>
+</body>
+</html>

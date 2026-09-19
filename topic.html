@@ -92,6 +92,16 @@
   .dd li::before { position:absolute; left:8px; top:8px; font-weight:800; }
   .dd .do li::before { content:"✓"; color:var(--ok); } .dd .dont li::before { content:"✕"; color:var(--warn, #b45309); }
   .dd li .from { display:block; font-size:11px; color:var(--muted); margin-top:2px; }
+  .mini-pipe { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin:0 0 8px; }
+  .mini-pipe .mp-name { font-weight:600; font-size:13.5px; }
+  .mini-pipe .mp-name a { color:inherit; text-decoration:none; } .mini-pipe .mp-name a:hover { color:var(--accent); }
+  .mini-pipe .mp-stage { font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--accent); font-weight:600; text-transform:uppercase; }
+  .mini-pipe .mp-line { font-size:13px; color:var(--ink-secondary); margin-top:4px; line-height:1.5; }
+  .mini-pipe .mp-next { font-size:12px; color:var(--muted); margin-top:4px; }
+  .mini-progress { display:flex; gap:3px; margin:8px 0 4px; }
+  .mp-dot { width:10px; height:10px; border-radius:50%; border:2px solid var(--border); }
+  .mp-dot.done { border-color:var(--ok); background:var(--ok); }
+  .mp-dot.active { border-color:var(--accent); background:var(--accent); }
   .live { margin-top:22px; }
   .live h2 { font-size:15px; margin:0 0 4px; } .live .sub { font-size:12.5px; color:var(--muted); margin:0 0 10px; }
   .row { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin:0 0 8px; font-size:13.5px; }
@@ -137,6 +147,7 @@
     <div id="sections"></div>
     <section class="live" id="live-research"><h2 id="research-head">Research watch</h2><p class="sub">Everything the daily task has filed on these drugs, newest first. Tier 1 = human RCT · 5 = opinion.</p><div id="research-list"></div></section>
     <section class="live" id="live-trials"><h2>Trials being watched</h2><p class="sub">Status straight from ClinicalTrials.gov; a change here is what revises the page.</p><div id="trial-list"></div></section>
+    <section class="live" id="live-pipes"><h2 id="pipes-head">Evidence pipelines</h2><p class="sub">How far each tracked intervention has progressed — from discovery through outcome trials. <a href="pipelines.html" style="color:var(--link);font-weight:600;text-decoration:none;">See all pipelines →</a></p><div id="pipe-list"></div></section>
     <section class="live" id="live-interv"><h2>Related interventions</h2><p class="sub">The graded rows on the Interventions page that this topic touches.</p><div id="interv-list"></div></section>
     <section class="live" id="live-media"><h2 id="media-head">Podcasts &amp; video</h2><div id="media-list"></div></section>
     <p class="version" id="version"></p>
@@ -203,6 +214,19 @@ async function load() {
   conn("ok");
   renderDoc(page[0]);
   renderLive();
+  // Pipelines for this topic
+  sb.from("longevity_pipelines").select("slug,intervention,current_stage,one_line,next_expected,topic_tags").eq("active",true).contains("topic_tags",[TOPIC]).order("intervention").then(({data}) => {
+    const STAGES = ["discovery","animal_proof","animal_replication","first_in_human","human_biomarker","human_outcome","proven"];
+    const SL = {"discovery":"Discovery","animal_proof":"Animal","animal_replication":"Replicated","first_in_human":"1st human","human_biomarker":"Biomarker","human_outcome":"Outcome","proven":"Proven"};
+    const el = document.getElementById("pipe-list");
+    if (!data || !data.length) { el.innerHTML = '<div class="empty">No tracked pipelines for this topic. <a href="pipelines.html">See all pipelines →</a></div>'; return; }
+    el.innerHTML = data.map(p => {
+      const ci = STAGES.indexOf(p.current_stage);
+      const dots = STAGES.map((s,i) => `<div class="mp-dot ${i<ci?"done":i===ci?"active":""}"></div>`).join("");
+      const nx = p.next_expected;
+      return `<div class="mini-pipe"><div style="display:flex;justify-content:space-between;align-items:baseline;"><span class="mp-name"><a href="pipelines.html#${esc(p.slug)}">${esc(p.intervention)}</a></span><span class="mp-stage">${esc(SL[p.current_stage]||p.current_stage)}</span></div><div class="mini-progress">${dots}</div><div class="mp-line">${esc(p.one_line)}</div>${nx ? `<div class="mp-next">Next: ${esc(nx.label)} · ${esc(nx.expected_date||"Unknown")}</div>` : ""}</div>`;
+    }).join("");
+  });
   sb.from("longevity_topic_pages").select("slug,title,version").order("slug").then(({data}) => { const seen = {}; (data||[]).forEach(r => { if (!seen[r.slug] || r.version > seen[r.slug].version) seen[r.slug] = r; }); document.getElementById("topic-switch").innerHTML = "Topics: " + Object.values(seen).map(r => `<a href="topic.html?slug=${esc(r.slug)}" class="${r.slug === TOPIC ? "is-current" : ""}">${esc(r.title)}</a>`).join(""); });
 }
 load();
